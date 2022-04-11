@@ -1,0 +1,117 @@
+.Tabletitle {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 12pt;
+    background-color: rgb(235, 233, 233);
+    //color: white;
+    font-weight: 500;
+    //height: 3em;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1px;
+}
+
+.element-filter {
+    //float: right;
+    margin-left: 0.5em;
+    width: 70%;
+}
+.mat-raised-button {
+    color: white;
+    background-color: rgb(110, 192, 27);
+}
+
+.actionButton {
+    float: right;
+    background-color: rgb(110, 192, 27);
+    border: black;
+    color: white;
+}
+
+.backButton {
+    float: right;
+    background-color: black;
+    color: white;
+}
+
+.backButtonColor {
+    background-color: black;
+    color: white;
+}
+
+.actionButtonColor {
+    background-color: rgb(110, 192, 27);
+    color: white;
+}
+
+
+.clone-icon {
+    transform: scale(.75);
+    vertical-align: middle;
+}
+
+.mat-icon {
+    cursor: pointer;
+}
+
+.invalid {
+    border: 1px solid red;
+}
+
+.input-group-text {
+    font-size: inherit;
+}
+
+
+
+//CSS for Imagetrust
+/*CSS for Error Messages*/
+
+#ithError {
+    margin-top: 10px;
+    font-size: large;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Hides the sidebar with batch hierarchy */
+
+#ithParent>div>div.itw-main-panel>div.itw-center-panel>div.itw-panel.itw-bep-panel.itw-resizable {
+    display: none;
+}
+
+
+/*Spinner CSS*/
+
+@keyframes spinner {
+    0% {
+        transform: translate3d(-50%, -50%, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate3d(-50%, -50%, 0) rotate(360deg);
+    }
+}
+
+.help-attr {
+    float: right;
+    position: relative;
+    top: 30px;
+}
+
+.spin::before {
+    animation: 1.5s linear infinite spinner;
+    animation-play-state: inherit;
+    border: solid 5px #cfd0d1;
+    border-bottom-color: #1c87c9;
+    border-radius: 50%;
+    content: "";
+    height: 40px;
+    width: 40px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    will-change: transform;
+    z-index: 2;
+}

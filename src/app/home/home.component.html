@@ -1,0 +1,68 @@
+
+<div class="col-6" style="float: right;"> <!--card p-2 m-2 -->
+    <div>
+        <div class="Tabletitle">Fields</div>
+
+        <div class="card m-2">
+            <!-- <form [formGroup]="mappingForm" class="card-body"> -->
+            <form class="card-body">
+
+                <div class="input-group-sm mb-3 input-group col-12">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text form-label-105 w-100">Document Type</span>
+                    </div>
+                    
+                    <!-- <mat-select formControlName="category" class="form-control" (selectionChange)="categorySelected($event)">
+                        <input (focusout)="focusOutFunction('category')" (keyup)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" [(ngModel)]="categorySearch" placeholder="search" [ngModelOptions]="{standalone: true}" class="form-control">
+                        <mat-option *ngFor="let cat of filteredCategories" [value]="cat">
+                            {{cat['name']}}
+                        </mat-option>
+                    </mat-select> -->
+                    <mat-select class="form-control" [(value)]="selectedDocument">
+                        <input (keyup)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" placeholder="search" class="form-control">
+                        <mat-option *ngFor="let cat of documentsList" [value]="cat">
+                            {{cat}}
+                        </mat-option>
+                    </mat-select>
+                </div>
+
+                
+                <button mat-raised-button class="backButton m-1">Back</button>
+                <!-- <button mat-raised-button class="actionButton m-1" [disabled]="!mappingForm.valid" *ngIf="button === 'Save'" (click)="save()">{{button}}</button>
+                <button mat-raised-button class="actionButton m-1" [disabled]="!mappingForm.valid" *ngIf="button === 'Update'" (click)="save()">{{button}}</button> -->
+
+            </form>
+
+            <app-maps-fields [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
+        </div>
+    </div>
+</div>
+
+<div  class="col-6" style="float: left; height: 100%;">
+    <div id="ithParent" class="col-12 h-100 fluid">
+        <!-- <div class="help-attr row"><a href="https://in-ith-web.s3.us-east-2.amazonaws.com/help-docoperations.html" target="_blank">Help</a></div> -->
+        <!--Parent container to host the client-->
+        <div id="imageTrustDiv">
+        </div>
+        
+    </div>
+
+    <!--Div to display Error-->
+    <div id="ithError">
+        <div id="msg"></div>
+        <button class="button" style="float: none;" id="close-window" onclick="closeWindow()">Close</button>
+    </div>
+    <!--Div to freeze the surrounding the confirm dialog-->
+    <div id="freezeLayer" class="freeze-layer" style="display:none;"></div>
+    <!--Spinner-->
+    <!-- <div id="spin" class="spin" style="display:none !important;"></div> -->
+    <!--Confirm dialog box to get user conformation to upload or update version-->
+    <div id="dialogCont" class="dlg-container">
+        <div class="dlg-header">Are you sure?</div>
+        <div id="dlgBody" class="dlg-body">Do you want to continue?</div>
+        <div class="dlg-footer">
+            <a id="action-button" onclick="SplitConfirm.okay();">Ok</a>
+            <a id="cancel-button" onclick="SplitConfirm.close();">Cancel</a>
+        </div>
+    </div>
+</div>

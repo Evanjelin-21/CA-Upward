@@ -1,0 +1,83 @@
+.Tabletitle {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 12pt;
+    background-color: rgb(235, 233, 233);
+    //color: white;
+    font-weight: 500;
+    //height: 3em;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1px;
+}
+
+.element-filter {
+    //float: right;
+    margin-left: 0.5em;
+    width: 70%;
+}
+.mat-raised-button {
+    color: white;
+    background-color: rgb(110, 192, 27);
+}
+
+.actionButton {
+    float: right;
+    background-color: rgb(110, 192, 27);
+    border: black;
+    color: white;
+}
+
+.backButton {
+    float: right;
+    background-color: black;
+    color: white;
+}
+
+.backButtonColor {
+    background-color: black;
+    color: white;
+}
+
+.actionButtonColor {
+    background-color: rgb(110, 192, 27);
+    color: white;
+}
+
+
+.clone-icon {
+    transform: scale(.75);
+    vertical-align: middle;
+}
+
+.mat-icon {
+    cursor: pointer;
+}
+
+.invalid {
+    border: 1px solid red;
+}
+
+.input-group-text {
+    font-size: inherit;
+}
+
+.text-responsive {
+    font-size: 12px !important;
+    
+  }
+
+.borderClass{
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    border-radius: 0.25rem;
+}
+
+.alternateRowColor{
+    background-color:lavenderblush;
+}
+        
+.mat-row:nth-child(odd){
+    background-color: black;
+}
+
+  
