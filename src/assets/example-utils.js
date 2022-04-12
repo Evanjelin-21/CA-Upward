@@ -12,7 +12,7 @@ var ithExamplesConfig = {
   //   accent: "#ffff00"
   // },
   // // GlobalStorageID: null,
-  //  UseCCT: false,
+  UseCCT: false,
   // RequireCCTOnStartup: false,
   // InitialCCTDetectDelayMs: 3000,
   // PromptForCCTDownload: false,

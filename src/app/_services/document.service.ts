@@ -3405,11 +3405,11 @@ export class DocumentService {
     private config: AppConfig) { }
 
   getExtractedJson(vaultId) {
-    var url = this.config.getConfig('extractedJsonUrl')
-    return this.http.post<any>(url, {
-      "vault_doc_id": vaultId
-  }).pipe();
-    //return this.licenseReportsJson;
+    var url = this.config.getConfig('extractedJsonUrl') + vaultId
+  //   return this.http.post<any>(url, {
+  //     "vault_doc_id": vaultId
+  // }).pipe();
+    return this.http.get<any>(url).pipe();
   }
 
   getProfileDetails(id): Observable<any> {

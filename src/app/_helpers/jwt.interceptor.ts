@@ -48,6 +48,7 @@ export class JwtInterceptor implements HttpInterceptor {
                 localStorage.removeItem('token');
                 console.log('Reload the page');
             } else if (err instanceof HttpErrorResponse && err.status === 500 && err.error.message.includes("Authorization token is not valid")) { 
+                localStorage.removeItem('token');
                 console.error(err)
             }
             return Observable.throw(err);

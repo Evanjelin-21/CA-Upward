@@ -1,19 +1,6 @@
 <div [hidden]="selectedDoc === ''" class="card p-2 text-responsive"> <!--m-2-->
     <div class="card-body "> <!--m-2-->
         <div class="container-fluid m-0 p-0">
-    
-            
-
-            <div *ngIf="selectedDoc === 'Maps'"  class="row mt-4">
-                <!-- <div *ngFor="let field of mapsFields" class="col-xl-6">
-                    <div *ngIf="field['type'] === 'Text'" class="input-group-sm mb-3 input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text form-label-105 w-100">{{field['column']}}</span>
-                        </div>
-                        <input class="form-control" id="confidenceLevel" name="confidenceLevel">
-                    </div>
-                </div> -->
-            </div>
         
             <mat-tab-group (selectedTabChange)="tabChanged($event)">
                 <mat-tab *ngFor="let tab of tabsList"  [label]="tab"></mat-tab>
@@ -21,41 +8,63 @@
 
             <div *ngIf="selectedDoc === 'LicenseReports' && shouldDisplayForm">
                 <form [formGroup]="reportsForm" class="row mt-4">
-                    <div *ngFor="let field of reportsOfLicenseFiltered" [formGroupName]="selectedDoc" class="col-md-6"> <!--col-xl-6-->
-                        <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
-                            <div (click)="onClickInInput(field)" class="input-group-prepend">
-                                <span [attr.for]="field['id']" class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
-                            </div>
-                            <input (click)="onClickInInput(field)" class="form-control" [id]="field['id']" [formControlName]="field['id']">
+                    <div [hidden]="selectedTable != ''" *ngFor="let section of sectionList">
+                        <div class="row fluid" style="text-align: center;">
+                            <h4>{{section}}</h4>
                         </div>
-
-                        <div *ngIf="field['fieldType']==='Numeric'" class="input-group-sm mb-3 input-group">
-                            <div (click)="onClickInInput(field)" class="input-group-prepend">
-                                <span [attr.for]="field['id']" class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
+                        <div class="row fluid">
+                            <div *ngFor="let field of reportsOfLicenseFiltered | filterPipe:section" [formGroupName]="selectedDoc" class="col-md-6">
+                                <!--col-xl-6-->
+                                <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
+                                    </div>
+                                    <input (click)="onClickInInput(field)"
+                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" class="form-control"
+                                        [id]="field['id']" [formControlName]="field['id']">
+                                </div>
+                        
+                                <div *ngIf="field['fieldType']==='Numeric'" class="input-group-sm mb-3 input-group">
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
+                                    </div>
+                                    <input (click)="onClickInInput(field)"
+                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" type="number"
+                                        class="form-control" id="confidenceLevel" name="confidenceLevel">
+                                </div>
+                        
+                                <div *ngIf="field['fieldType']==='checkbox'" class="input-group-sm mb-3 input-group" style>
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
+                                    </div>
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend"
+                                        style="flex-grow: 1; display: flex; align-items: center; margin-left: 10px;">
+                                        <input class="form-check-input position-static"
+                                            [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                            [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" [id]="field['id']"
+                                            [formControlName]="field['id']" style="width: 20px; margin-top: 0; height: 20px;" type="checkbox"
+                                            [value]="field['display_value']">
+                                    </div>
+                                </div>
                             </div>
-                            <input (click)="onClickInInput(field)"  type="number" class="form-control" id="confidenceLevel" name="confidenceLevel">
                         </div>
-
-                        <div *ngIf="field['fieldType']==='checkbox'" class="input-group-sm mb-3 input-group" style>
-                            <div (click)="onClickInInput(field)" class="input-group-prepend">
-                                <span [attr.for]="field['id']" class="input-group-text form-label-105 w-100">{{field['display_label']}}</span>
-                            </div>
-                            <div (click)="onClickInInput(field)" class="input-group-prepend" style="flex-grow: 1; display: flex; align-items: center; margin-left: 10px;">
-                                <input class="form-check-input position-static" [id]="field['id']" [formControlName]="field['id']" style="width: 20px; margin-top: 0; height: 20px;" type="checkbox" [value]="field['display_value']" >
-                            </div>                        
-                        </div>
+                        <hr/>
                     </div>
-
                 
 
                     <div class="card col-xl-12" *ngIf="selectedTable != ''"> <!--m-2-->
-                        <div *ngFor="let row of currentUseOfWaterTable; let i = index" [formGroupName]="selectedTable" [style]="i === 0 ? 'background-color: bisque;
+                        <div *ngFor="let row of currentUseOfWaterTable; let i = index" [formGroupName]="selectedTable" [style]="i === 0 ? 'background-color: #6ec01b;
                         margin: 0;
                         text-align: center;':''" class="card-body row p-1 m-0">
                             
                             <ng-container *ngFor="let field of row; let j = index">
                                 <div *ngIf="i != 0 && j != 0; else elseBlock1" class="col-3 p-1">
-                                    <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" id="2007" name="2007Input" [value]=field>
+                                    <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
                                 </div>
 
                                 <ng-template #elseBlock1>
@@ -69,146 +78,7 @@
                         </div>
                     </div>
                 </form>
-                <!-- <div id="coordinatessohamid" hidden>
-                    soham Kale
-                </div> -->
-
-                <!-- <div class="card col-xl-12 m-2">
-                   
-                    <div class="card-body" style="text-align: center;">
-                       
-                        <div class="row fluid mb-1" style="background-color: bisque; text-align: center;">
-                            <div class="col-4">
-                                2007
-                            </div>
-                            <div class="col-4">
-                                2008
-                            </div>
-                            <div class="col-4">
-                                2009
-                            </div>
-                        </div>
-
-                        <div *ngFor="let field of currentUseOfWaterTable; let i = index"  class= "row fluid" >
-                            <div class="col-12" style="text-align: center;">{{field['column']}}</div>
-                            <div class="col-4">
-                                <input class="form-control" id="2007" name="2007Input">
-                            </div>
-                            <div class="col-4">
-                                <input class="form-control" id="2008" name="2008Input">
-                            </div>
-                            <div class="col-4">
-                                <input class="form-control" id="2009" name="2009Input">
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-
-                <!-- <div class="card col-xl-12 m-2">
-                   
-                    <div class="card-body" style="text-align: center;">
-                        <div class="row fluid mb-1" style="background-color: bisque; text-align: center;">
-                            <div class="col-6">
-                                Current Use of Water
-                            </div>
-                            <div class="col-2">
-                                2007
-                            </div>
-                            <div class="col-2">
-                                2008
-                            </div>
-                            <div class="col-2">
-                                2009
-                            </div>
-                        </div>
-
-                        <div *ngFor="let field of currentUseOfWaterTable"  style="text-align: start;" class="row fluid m-1 p-1 borderClass">
-                            <div style="align-self: center;" class="col-6">
-                                Soham
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2007" name="2007Input">
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2008" name="2008Input">
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2009" name="2009Input">
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-
-                <!-- <div class="card col-xl-12 m-2">
-                   
-                    <div class="card-body" style="text-align: center;">
-                        <div class="row fluid mb-1" style="background-color: bisque; text-align: center;">
-                            <div class="col-6">
-                                Current Use of Water
-                            </div>
-                            <div class="col-2">
-                                2007
-                            </div>
-                            <div class="col-2">
-                                2008
-                            </div>
-                            <div class="col-2">
-                                2009
-                            </div>
-                        </div>
-
-                        <div *ngFor="let field of currentAmountsOfWaterDivertedTable"  style="text-align: start;" class="row fluid m-1 p-1 borderClass">
-                            <div style="align-self: center;" class="col-6">
-                                {{field['column']}}
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2007" name="2007Input">
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2008" name="2008Input">
-                            </div>
-                            <div class="col-2">
-                                <input class="form-control" id="2009" name="2009Input">
-                            </div>
-                        </div>
-                    </div>
-                </div> -->
-            </div>
-
-            <div *ngIf="selectedDoc === 'ProgressReport'"  class="row">
-                <!-- <div *ngFor="let field of progressReportFields" class="col-xl-6">
-                    <div class="input-group-sm mb-3 input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text form-label-105 w-100">{{field['column']}}</span>
-                        </div>
-                        <input class="form-control" id="confidenceLevel" name="confidenceLevel">
-                    </div>
-                </div> -->
-            </div>
-
-
-            <div *ngIf="selectedDoc === 'DiversionLicense'"  class="row">
-                <!-- <div *ngFor="let field of diversionLicenseFields" class="col-xl-6">
-                    <div class="input-group-sm mb-3 input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text form-label-105 w-100">{{field['column']}}</span>
-                        </div>
-                        <input class="form-control" id="confidenceLevel" name="confidenceLevel">
-                    </div>
-                </div> -->
-            </div>
-
-            <div *ngIf="selectedDoc === 'AppropriateUnap'"  class="row">
-                <div *ngFor="let field of appropriateUnapFields" class="col-xl-6">
-                    <div class="input-group-sm mb-3 input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text form-label-105 w-100">{{field['column']}}</span>
-                        </div>
-                        <input class="form-control" id="confidenceLevel" name="confidenceLevel">
-                    </div>
-                </div>
             </div>
         </div>
     </div>
-    <button (click)="completeForm()">Complete</button>
 </div>

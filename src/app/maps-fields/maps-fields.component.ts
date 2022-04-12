@@ -711,7 +711,7 @@ export class MapsFieldsComponent implements OnInit {
 
   selectedTable = '';
   shouldDisplayForm = false;
-
+  sectionList = [];
   // @HostListener('window:message', ['$event'])
   // onClientLoadedAndWindowClosed(event: any): void {
   //   console.log(event.data)
@@ -782,16 +782,38 @@ export class MapsFieldsComponent implements OnInit {
     if(this.reportsForm != undefined) {
       this.reportsForm.reset();
     }
+
+    if(this.selectedDoc === 'LicenseReports') {
+      this.licenseReportsJson = (await this.docService.getExtractedJson(this.vaultDocId).toPromise())['metadata']['properties']['Extracted Json'];
+      this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
+      //this.profileDetails = this.docService.getProfileDetails2();
+      console.log(this.profileDetails, this.licenseReportsJson);
+     
+      this.populateReportsOfLicenseFieldsUsingProfileDetails();
+      this.currentUseOfWaterTable = [];
+      this.currentAmountsOfWaterDivertedTable = [];
+      
+      let tempArray = [] as any;
+      this.populateReportsOfLicenseFields();
+      this.shouldDisplayForm = true;
+      this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['table'] == '');
+      this.tabChanged({
+        "tab": {
+          "textLabel": this.tabsList[0]
+        }
+      })
+    }    
   }
 
   tabChanged(e: any) {
   
-    this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['section'] === e.tab.textLabel)
+    this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['tab'] === e.tab.textLabel)
     for(let i = 0; i < this.tableList.length; i++) {
       if(e.tab.textLabel.includes(this.tableList[i].name)) {
         this.selectedTable = this.tableList[i].name;
         this.currentUseOfWaterTable = this.tableList[i].table;
         console.log(this.currentUseOfWaterTable);
+        this.onClickInInput(this.tableList[i].full_table);
         break;
         //TO DO: Need to give each table a name
       } else {
@@ -806,73 +828,17 @@ export class MapsFieldsComponent implements OnInit {
   }
 
   onClickInInput(field) {
-    // this.cookieService.set( 'coordinates',JSON.stringify(field)); // To Set Cookie
-    // let cookieValue = this.cookieService.get('coordinates'); // To Get Cookie
-    // console.log(JSON.parse(cookieValue));
     console.log(field)
     if(field['page'] != null && field['bbox'] != null && field['page'] != undefined && field['bbox'] != undefined) {
-      new drawHighlightsUsingBboxes(field['page'], field['bbox'])
+      new drawHighlightsUsingBboxes(field['page'], field['bbox'], field['confidence'])
     } else {
       new clearAllHighlights()
     }
-      
   }
 
   async ngOnChanges() {
     if(this.selectedDoc === 'LicenseReports') {
-      this.licenseReportsJson = await this.docService.getExtractedJson(this.vaultDocId).toPromise();
-      this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
-      //this.profileDetails = this.docService.getProfileDetails2();
-      console.log(this.profileDetails, this.licenseReportsJson);
-      this.shouldDisplayForm = true;
-      this.populateReportsOfLicenseFieldsUsingProfileDetails();
-      this.currentUseOfWaterTable = [];
-      this.currentAmountsOfWaterDivertedTable = [];
-      
-      let tempArray = [] as any;
-      this.populateReportsOfLicenseFields();
-      //for(let i = 0; i < this.reportsOfLicenseFields.length; i++) {
-        //let temp = this.reportsOfLicenseFields[i]['column']?.toLowerCase();
-
-        // if(temp === 'irrigation' || temp === 'frost_protection' || temp === 'heat_protection' || temp === 'industrial'
-        // || temp === 'stock_watering' || temp === 'municipal' || temp === 'domestic' || temp === 'power_generation' || temp === 'recreation' || temp === 'other') {
-        //   this.currentUseOfWaterTable.push(this.reportsOfLicenseFields[i]);
-        //   tempArray.push(i);
-        // }
-
-        // if(this.reportsOfLicenseFields[i]['table'] === 'currentUseOfWater') {
-        //   this.currentUseOfWaterTable.push(this.reportsOfLicenseFields[i]);
-        //   tempArray.push(i);
-        // }
-
-        // if(this.reportsOfLicenseFields[i]['table'] === 'currentAmountsOfWaterDiverted') {
-        //   this.currentAmountsOfWaterDivertedTable.push(this.reportsOfLicenseFields[i]);
-        //   tempArray.push(i);
-        // }
-
-        // if(this.reportsOfLicenseFields[i]['section'] != '') {
-        //   if(!this.tabsList.includes(this.reportsOfLicenseFields[i]['section'])) {
-        //     this.tabsList.push(this.reportsOfLicenseFields[i]['section']);
-        //   }          
-        // }
-        // if(temp.includes('_jan')  || temp.includes('_feb') || temp.includes('_mar') || temp.includes('_apr')
-        // || temp.includes('_may') || temp.includes('_jun') || temp.includes('_jul') || temp.includes('_aug') 
-        // || temp.includes('_sep') || temp.includes('_oct') || temp.includes('_nov') || temp.includes('_dec')) {
-        //   this.currentAmountsOfWaterDivertedTable.push(this.reportsOfLicenseFields[i]);
-        //   tempArray.push(i);
-        // }
-      //}
-
-      // for(let i = tempArray.length - 1; i >= 0; i--) {
-      //   this.reportsOfLicenseFields.splice(i, 1);
-      //   console.log(tempArray[i]);
-      // }
-      this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['table'] == '');
-      this.tabChanged({
-        "tab": {
-          "textLabel": this.tabsList[0]
-        }
-      })
+     
       //console.log(this.reportsOfLicenseFiltered, this.currentUseOfWaterTable,  this.currentAmountsOfWaterDivertedTable);
     } else if(this.selectedDoc === 'DiversionLicense') {
       this.licenseReportsJson = await this.docService.getExtractedJson(this.vaultDocId).toPromise();
@@ -915,37 +881,67 @@ export class MapsFieldsComponent implements OnInit {
         console.log(allresults[i]);
       }
 
-      // let rand = Math.floor(Math.random() * 3);
-      // if(allresults[i]['fieldType'] === 'table') {
-      //   allresults[i]['section'] = 'WaterUseTable';
-      // } else if(rand === 0) {
-      //   allresults[i]['section'] = 'Summary';
-      // } else if (rand === 1) {
-      //   allresults[i]['section'] = 'Compliance';
-      // } else {
-      //   allresults[i]['section'] = 'Storage';
-      // }
-      
-      
-
       allresults[i]['display_label'] = allresults[i]['meta']['text'][0].split('|')[2].trim();
      
       if(allresults[i]['fieldType'] === 'table') {
-        allresults[i]['section'] = 'WaterUseTable';
+        allresults[i]['tab'] = 'WaterUseTable';
       } else {
-        allresults[i]['section'] = 'P1';
+        allresults[i]['tab'] = 'Summary';
       }
 
-      if(allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Water Conservation Efforts Implementation' || allresults[i]['display_label'] === 'Groundwater usage in lieu of the surface water' || allresults[i]['display_label'] === 'Water Quality and WasteWater Reclamation') {
+      if(allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature') {
         allresults[i]['section'] = 'P2';
       }
+
+      // if(allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'License Id'
+      // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'Primary Owner') {
+      //   allresults[i]['section'] = 'Summary';
+      // }
+
+      // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms' || allresults[i]['display_label'] === 'Request Revocation'
+      // || allresults[i]['display_label'] === 'Remarks') {
+      //   allresults[i]['section'] = 'Compliance';
+      // }
+
+      if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
+      || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
+        allresults[i]['section'] = 'Applicant Details';
+      }
+
+      if(allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'POD Id'
+      || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'Use Net Acreage' || allresults[i]['display_label'] === 'Purpose Of Water Used'
+      || allresults[i]['display_label'] === 'Diversion Season' || allresults[i]['display_label'] === 'Request Revocation' || allresults[i]['display_label'] === 'Max Collection to  Storage' || allresults[i]['display_label'] === 'Water Right Face Value') {
+        allresults[i]['section'] = 'License Summary';
+      }
+
+      if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
+      || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks') {
+        allresults[i]['section'] = 'Compliance';
+      }
+
+      if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
+        allresults[i]['section'] = 'P2';
+      }
+
+      if(allresults[i]['display_label'] === 'Reclaimed Water') {
+        allresults[i]['section'] = 'P2';
+      }
+
+      if(allresults[i]['display_label'] === 'Conjuctive Use') {
+        allresults[i]['section'] = 'P2';
+      }
+
     }
+
+    allresults = allresults.filter(e => e['section'] != 'P2');
 
     this.allFieldsFromProfileDetails = [...allresults];
     console.log(allresults);
+    this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
   }
 
   populateReportsOfLicenseFields() {
+    let knownKeys = ["confidence", "xmin", "ymin", "xmax", "ymax", "doc_width", "doc_height", "display_label"]
     let values = this.licenseReportsJson['values'];
     console.log(values);
     let valueKeys = Object.keys(values);
@@ -956,14 +952,21 @@ export class MapsFieldsComponent implements OnInit {
     for(let i = 0; i < valueKeys.length; i++) {
       if(values[valueKeys[i]]['KV']) {
         for(let j = 0; j < values[valueKeys[i]]['KV'].length; j++) {
-          values[valueKeys[i]]['KV'][j]['page'] = i + 1;
           let tempV = values[valueKeys[i]]['KV'][j];
           if(tempV && Object.keys(values[valueKeys[i]]['KV'][j]).length != 0) {
             let seObjKeys = Object.keys(values[valueKeys[i]]['KV'][j]);
-            values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
+            console.log(seObjKeys);
+            for(let k = 0; k < seObjKeys.length; k++) {
+              if(!knownKeys.includes(seObjKeys[k])) {
+                values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[k]];
+                break;
+              }
+            }
+            //values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
             values[valueKeys[i]]['KV'][j]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
             retArray.push(values[valueKeys[i]]['KV'][j]);
           }
+          values[valueKeys[i]]['KV'][j]['page'] = i + 1;
         }
       }
       if(values[valueKeys[i]]['SE']) {
@@ -996,16 +999,33 @@ export class MapsFieldsComponent implements OnInit {
       if(values[valueKeys[i]]['TE']) {
         for(let j = 0; j < values[valueKeys[i]]['TE'].length; j++) {
           if(values[valueKeys[i]]['TE'][j]) {
-            values[valueKeys[i]]['TE'][j]['display_label'] = Object.keys(values[valueKeys[i]]['TE'][j])[0];
+            //values[valueKeys[i]]['TE'][j]['display_label'] = Object.keys(values[valueKeys[i]]['TE'][j])[0];
             values[valueKeys[i]]['TE'][j]['page'] = i + 1;
             let allTableEntries = values[valueKeys[i]]['TE'][j][Object.keys(values[valueKeys[i]]['TE'][j])[0]];
             let headers = [];
+            values[valueKeys[i]]['TE'][j]['display_label'] = allTableEntries['display_label'];
             if(allTableEntries && allTableEntries['1']) {
               console.log(allTableEntries, values[valueKeys[i]]['TE'][j])
               let [headings, ...rows] = allTableEntries['1'];
-              console.log(headings);
+              console.log(headings, rows);
 
-              
+
+
+
+
+
+
+              //Getting rid of NA/MA from tables
+
+              for(let r1 = 0; r1 < rows.length; r1++) {
+                
+                for(let r2 = 0; r2 < rows[r1].length; r2++) {
+                
+                  if(rows[r1][r2] && (rows[r1][r2].includes('NA') || rows[r1][r2].includes('MA'))) {
+                    rows[r1][r2] = '';
+                  }
+                }
+              }
               
 
 
@@ -1070,6 +1090,8 @@ export class MapsFieldsComponent implements OnInit {
                 }
               }
 
+              
+
 
 
 
@@ -1079,33 +1101,36 @@ export class MapsFieldsComponent implements OnInit {
               
 
               console.log(rows);
+            
+              // let tempFormGroup: any = {};
+              // for(let i = 1; i < rows.length; i++) {
+              //   for(let j = 1; j < rows[i].length; j++) {
+              //     tempFormGroup[rows[i].length * i + j] = new FormControl(rows[i][j]);
+              //   }
+              // }
 
-              let tempFormGroup: any = {};
-              for(let i = 1; i < rows.length; i++) {
-                for(let j = 1; j < rows[i].length; j++) {
-                  tempFormGroup[rows[i].length * i + j] = new FormControl(rows[i][j]);
-                }
-              }
-
-              let key = values[valueKeys[i]]['TE'][j]['display_label'];
+              // let key = values[valueKeys[i]]['TE'][j]['display_label'];
               
               
-              let temFbGroup = {};
-              temFbGroup[key] = new FormGroup(tempFormGroup)
-              if(this.reportsForm === undefined) {
-                this.reportsForm = this.fb.group(temFbGroup)
-              } else {
-                this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
-              }
-
-
-              console.log(tempFormGroup);
+              // let temFbGroup = {};
+              // temFbGroup[key] = new FormGroup(tempFormGroup)
+              // if(this.reportsForm === undefined) {
+              //   this.reportsForm = this.fb.group(temFbGroup)
+              // } else {
+              //   this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
+              // }
+              // console.log(tempFormGroup);
              
               console.log(headings, rows, rows.length, rows[0].length)
-              this.tableList.push({
-                "name": values[valueKeys[i]]['TE'][j]['display_label'],
-                "table": rows
-              });
+              retArray.push({
+                "display_label": values[valueKeys[i]]['TE'][j]['display_label'],
+                "table": rows,
+                "page": i + 1
+              })
+              // this.tableList.push({
+              //   "name": values[valueKeys[i]]['TE'][j]['display_label'],
+              //   "table": rows
+              // });
             }
           }
         }
@@ -1124,18 +1149,67 @@ export class MapsFieldsComponent implements OnInit {
       if(m.has(retArray[i]['display_label'])) {
         let temp = m.get(retArray[i]['display_label']);
 
-        temp['display_value'] = retArray[i]['display_value'];
-        temp['bbox'] = retArray[i]['bbox'];
-        if(retArray[i]['page'] == undefined) {
+        if(temp['fieldType'] != 'table') {
+          temp['display_value'] = retArray[i]['display_value'];
+          temp['bbox'] = retArray[i]['bbox'];
+          temp['confidence'] = retArray[i]['confidence'];
+          if(retArray[i]['page'] == undefined) {
+            console.log(retArray[i]);
+          }
+          temp['page'] = retArray[i]['page'];
+        } else if(temp['fieldType'] === 'table') {
+
           console.log(retArray[i]);
+          temp['display_value'] = retArray[i]['table'];
+          temp['page'] = retArray[i]['page'];
+
+
+
+          let tempFormGroup: any = {};
+          for (let a = 1; a < retArray[i]['table'].length; a++) {
+            for (let b = 1; b < retArray[i]['table'][a].length; b++) {
+              tempFormGroup[retArray[i]['table'][a].length * a + b] = new FormControl(retArray[i]['table'][a][b]);
+            }
+          }
+          let key = retArray[i]['display_label'];
+          
+          let temFbGroup = {};
+          temFbGroup[key] = new FormGroup(tempFormGroup)
+          if(this.reportsForm === undefined) {
+            this.reportsForm = this.fb.group(temFbGroup)
+          } else {
+            this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
+          }
+
+        
+          // temp['bbox'] = {
+          //   "width": temp['value']['width'] / 100,
+          //   "height": temp['value']['height'] / 100,
+          //   "left": temp['value']['x'] / temp['value']['width'],
+          //   "top": temp['value']['y'] / temp['value']['height'],
+          // }
+
+          temp['bbox'] = {
+            "width": temp['value']['width'],
+            "height": temp['value']['height'],
+            "left": temp['value']['x'],
+            "top": temp['value']['y'],
+          }
+          this.tableList.push({
+            "name": retArray[i]['display_label'],
+            "table": retArray[i]['table'],
+            "full_table": temp
+          });
+        } else {
+          alert()
         }
-        temp['page'] = retArray[i]['page'];
       }   
       //m.set(this.allFieldsFromProfileDetails[i]['display_label'], this.allFieldsFromProfileDetails[i])
     }
 
 
-    this.tabsList = ["P1", "P2"];
+    this.tabsList = ["Summary"];
+    
 
     this.tableList.forEach(element => {
       this.tabsList.push(element.name);

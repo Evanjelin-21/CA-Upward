@@ -346,6 +346,18 @@ function validateAndLoadDocument(batch) {
       ithInstance.importDocument(batch.folders[0], documentUrl, "client").then(function () {
         //Set document title to each of the documents
         //setDocumentTitles()
+        console.log('Pages Loaded')
+        let pageSelectors = document.getElementsByClassName("itw-pageViewer")[0];
+        pageSelectors.click();
+        let itwTab = (document.getElementsByClassName('itw-tab'));
+        itwTab[1].click();
+        let button = document.getElementById('custom-size')
+        console.log(button);
+        button.dispatchEvent(new Event('mouseenter'));
+        let button2 = document.getElementById('fit-width')
+        button2.click();
+        button.dispatchEvent(new Event('mouseleave'));
+        //changeToFitPage();
       }).catch(function () {
         alert("Failed to load doc ")
         // spinnerDiv.style.display = "none"
@@ -715,8 +727,9 @@ function changeToFitPage() {
   if (fitToPageButton === null) {
     fitToPageButton = document.getElementsByClassName('itw-controls');
     console.log(fitToPageButton);
+    fitToPageButton.click();
   };
-  //fitToPageButton.click();
+  
 }
 
 // function getChangePageViewOption() {
@@ -1528,11 +1541,11 @@ function drawHighlights(pageNum) {
   });
 }
 
-function drawHighlightsUsingBboxes(pageNum, bbox) {
+function drawHighlightsUsingBboxes(pageNum, bbox, confidence) {
   ithInstance.clearHighlights();
   var hl = ithInstance.highlightZone(bbox.left, bbox.top, bbox.width, bbox.height, pageNum - 1, {
     absolute: false,
-    color: 'rgba(0,255,0,.2)',
+    color: confidence != undefined && confidence < 50 ? 'rgba(255,0,0,.2)':'rgba(0,255,0,.2)',
     outlineColor: 'black',
     scrollToZone: false
   });
