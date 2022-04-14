@@ -1672,7 +1672,7 @@ async function getDocURL(token, vaultdocId) {
   }
   console.log(header);
   return new Promise(async function (resolve, reject) {
-    var url = 'http://internal-docuedge-vault-api-alb-1366302947.us-west-2.elb.amazonaws.com/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
+    var url = 'https://internal-docuedge-vault-api-alb-1366302947.us-west-2.elb.amazonaws.com/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
     const response = await fetch(url, { headers: header })
     const data = await response.json()
     console.log("Response", data)

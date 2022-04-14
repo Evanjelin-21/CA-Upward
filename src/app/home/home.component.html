@@ -13,12 +13,12 @@
                         <span class="input-group-text form-label-105 w-100">Document Type</span>
                     </div>
                     <mat-label class="form-control">
-                        {{selectedDocument === 'LicenseReports' ? 'Reports of Licensee':''}}
+                        {{documentType}}
                     </mat-label>
                 </div>
             </div>
 
-            <app-maps-fields [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
+            <app-maps-fields  (documentTypeEvent)="addDocumentType($event)" [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
         </div>
     </div>
 </div>

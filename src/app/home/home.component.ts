@@ -43,6 +43,7 @@ export class HomeComponent implements OnInit {
 
   selectedTable = '';
   shouldDisplayForm = false;
+  documentType = null;
   constructor(
     private loginSvc:loginService,
     private route: ActivatedRoute,
@@ -103,6 +104,10 @@ export class HomeComponent implements OnInit {
 
     
      
+  }
+
+  addDocumentType(type) {
+    this.documentType = type;
   }
 
   tabChanged(e: any) {

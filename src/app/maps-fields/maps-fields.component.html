@@ -6,14 +6,14 @@
                 <mat-tab *ngFor="let tab of tabsList"  [label]="tab"></mat-tab>
             </mat-tab-group>
 
-            <div *ngIf="selectedDoc === 'LicenseReports' && shouldDisplayForm">
+            <div *ngIf="shouldDisplayForm">
                 <form [formGroup]="reportsForm" class="row mt-4">
-                    <div [hidden]="selectedTable != ''" *ngFor="let section of sectionList">
-                        <div class="row fluid" style="text-align: center;">
+                    <!-- <div *ngFor="let section of sectionList">
+                        <div *ngIf="elementsList.children.length > 0" class="row fluid" style="text-align: center;">
                             <h4>{{section}}</h4>
-                        </div>
-                        <div class="row fluid">
-                            <div *ngFor="let field of reportsOfLicenseFiltered | filterPipe:section" [formGroupName]="selectedDoc" class="col-md-6">
+                        </div> | filterPipe:section--> 
+                        <div #elementsList class="row fluid">
+                            <div *ngFor="let field of reportsOfLicenseFiltered" [formGroupName]="documentType" class="col-md-6">
                                 <!--col-xl-6-->
                                 <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
                                     <div (click)="onClickInInput(field)" class="input-group-prepend">
@@ -53,29 +53,42 @@
                                 </div>
                             </div>
                         </div>
-                        <hr/>
-                    </div>
+                        <!-- <hr *ngIf="elementsList.children.length > 0"/>
+                    </div> -->
                 
 
-                    <div class="card col-xl-12" *ngIf="selectedTable != ''"> <!--m-2-->
-                        <div *ngFor="let row of currentUseOfWaterTable; let i = index" [formGroupName]="selectedTable" [style]="i === 0 ? 'background-color: #6ec01b;
-                        margin: 0;
-                        text-align: center;':''" class="card-body row p-1 m-0">
-                            
-                            <ng-container *ngFor="let field of row; let j = index">
-                                <div *ngIf="i != 0 && j != 0; else elseBlock1" class="col-3 p-1">
-                                    <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
-                                </div>
-
-                                <ng-template #elseBlock1>
-                                    <div class="col-3 " style="justify-content: center; align-self: center;">
-                                        <h4 style="margin: 0;">{{field}}</h4>
-                                    </div>
-                                </ng-template>
+                    <div class="card col-xl-12" *ngIf="selectedTableNames.length != 0"> <!--m-2-->
+                        <div *ngFor="let table of fullTableArray; let index = index" class="border border-dark mt-2 mb-2">
+                            <div *ngFor="let row of table; let i = index" [formGroupName]="selectedTableNames[index]" [style]="i === 0 ? 'background-color: #6ec01b;
+                            margin: 0;
+                            text-align: center;':''" class="card-body row p-1 m-0 ">
                                 
-                            </ng-container>
-                            
+                                <ng-container *ngFor="let field of row; let j = index">
+                                    <ng-container *ngIf="selectedTableNames[index] === 'LicenseToSummaryTable'; else elseBlock">
+                                        <div *ngIf="i != 0; else elseBlock1" class="col-3 p-1">
+                                            <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
+                                        </div>
+                                    </ng-container>
+                                    
+
+                                    <ng-template #elseBlock>
+                                        <div *ngIf="i != 0 && j != 0; else elseBlock1" class="col-3 p-1">
+                                            <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
+                                        </div>
+                                    </ng-template>
+                                    
+    
+                                    <ng-template #elseBlock1>
+                                        <div class="col-3 " style="justify-content: center; align-self: center;">
+                                            <h4 style="margin: 0;">{{field}}</h4>
+                                        </div>
+                                    </ng-template>
+                                    
+                                </ng-container>
+                                
+                            </div>
                         </div>
+                        
                     </div>
                 </form>
             </div>

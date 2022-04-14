@@ -1,4 +1,4 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentService } from '../_services/document.service';
 import { CookieService } from 'ngx-cookie-service';
@@ -25,693 +25,22 @@ class field {
   styleUrls: ['./maps-fields.component.scss']
 })
 export class MapsFieldsComponent implements OnInit {
-  // mapsFields = [
-  //   new field('PRIMARY_OWNER_NAME', 'OWNER', 'Text'),
-  //   new field('COUNTY', 'County Of', 'Text'),
-  //   new field('APPLICATION_NUMBER', 'APPLICATION', 'Text'),
-  //   new field('PERMIT_ID', 'PERMIT', 'Text'),
-  //   new field('LICENSE_ID', 'LICENSE', 'Text'),
-  //   new field('SECTION', 'PROJECTION', 'Text'),
-  //   new field('TOWNSHIP', 'TOWNSHIP', 'Text'),
-  //   new field('RANGE', 'RANGE', 'Text'),
-  // ]
-
-//   reportsOfLicenseFields: any = [
-//     {
-//         "column": "AMOUNT_EXTRACTED_YEAR",
-//         "label": "Amount of GroundWater Extracted",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "AMOUNT_EXTRACTED_YEAR_UNIT",
-//         "label": "AMOUNT_EXTRACTED_YEAR_UNIT",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "APPLICATION_NUMBER",
-//         "label": "Applcatio Number",
-//         "type": "Text",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "LICENSE_ID",
-//         "label": "License Number",
-//         "type": "Text",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "COMPLETELY_EMPTY_1",
-//         "label": "Emptied Reservoir_1",
-//         "type": "Text",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "COMPLETELY_EMPTY_2",
-//         "label": "Emptied Reservoir_2",
-//         "type": "Text",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "COMPLYING_WITH_ALL_TERMS",
-//         "label": "Complying License",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "compliance"
-//     },
-//     {
-//         "column": "CONSERVATION_AMOUNT",
-//         "label": "Water Consservation Amount",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "compliance"
-//     },
-//     {
-//         "column": "CONSERVATION_AMOUNT_UNIT",
-//         "label": "Water Conservation Unit",
-//         "type": "Text",
-//         "table": "",
-//         "section": "compliance"
-//     },
-//     {
-//         "column": "COUNTY",
-//         "label": "COUNTY LOCATION",
-//         "type": "Text",
-//         "table": "",
-//         "section": "summary"
-//     },
-//     {
-//         "column": "DOMESTIC",
-//         "label": "Domestic",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "DUST_CONTROL",
-//         "label": "Dust ocntrol",
-//         "type": "Text",
-//         "table": "",
-//         "section": "compliance"
-//     },
-//     {
-//         "column": "FEET_BELOW_AT_MAX_1",
-//         "label": "Feet below spillway Max_1",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "compliance"
-//     },
-//     {
-//         "column": "FEET_BELOW_AT_MAX_2",
-//         "label": "Feet below spillway Max_2",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "rateOfDiversion"
-//     },
-//     {
-//         "column": "FEET_BELOW_AT_MIN_1",
-//         "label": "Feet below spillway Min_1",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "rateOfDiversion"
-//     },
-//     {
-//         "column": "FEET_BELOW_AT_MIN_2",
-//         "label": "Feet below spillway Min_2",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "rateOfDiversion"
-//     },
-//     {
-//         "column": "FROST_PROTECTION",
-//         "label": "Frost Protection",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "HEAT_PROTECTION",
-//         "label": "Heat Protection",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "INDUSTRIAL",
-//         "label": "Industrial",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "IRRIGATION",
-//         "label": "Acreage Irrigation",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "LICENSE_ID",
-//         "label": "License No:",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_APR",
-//         "label": "Maximum ROD APR",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_AUG",
-//         "label": "Maximum ROD AUG",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_DEC",
-//         "label": "Maximum ROD DEC",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_JAN_",
-//         "label": "Maximum ROD Jan",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_JUL",
-//         "label": "Maximum ROD JUL",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_JUN",
-//         "label": "Maximum ROD JUN",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_MAY",
-//         "label": "Maximum ROD May",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_NOV",
-//         "label": "Maximum ROD NOV",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_OCT",
-//         "label": "Maximum ROD OCT",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MAX_ROD_REPORT_SEP",
-//         "label": "Maximum ROD SEPT",
-//         "type": "Numeric",
-//         "table": "currentAmountsOfWaterDiverted",
-//         "section": "currentAmountsOfWaterDiverted"
-//     },
-//     {
-//         "column": "MILLING",
-//         "label": "Milling",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "MINING",
-//         "label": "Mining",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "MUNICIPAL",
-//         "label": "Municipal",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "NUMBER_OF_CROPS",
-//         "label": "Total # Cropss",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "OTHER",
-//         "label": "Other Uses Specify",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "OWNER_OF_RECORD",
-//         "label": "Owner of record",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "POWER_GENERATION",
-//         "label": "Power generation",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "PRIMARY_OWNER",
-//         "label": "Owner(S) OF Record",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "REASON_FOR_NON_COMPLIANCE",
-//         "label": "Remarks",
-//         "type": "Text",
-//         "table": "",
-//         "section": "purposeOfUse"
-//     },
-//     {
-//         "column": "RECLAMATION_AMOUNT",
-//         "label": "Reclamation Amount",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "RECREATION",
-//         "label": "Recreational",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "REQUEST_REVOCATION",
-//         "label": "Request Revocation",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "REVIEWED_WATER_RIGHT_PERMIT",
-//         "label": "Reviewed_License",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "SNOW_MAKING",
-//         "label": "Snow making",
-//         "type": "Text",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "SOURCE_OF_WATER",
-//         "label": "Name(s) of sources of water",
-//         "type": "Text",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "SPECIFY_FISH_AND_WILD_LIFE",
-//         "label": "Specify Fish and WIld life",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "waterBeneficiallyUsedAnnually"
-//     },
-//     {
-//         "column": "SPECIFY_OTHER",
-//         "label": "Specify Other",
-//         "type": "Text",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "SPILLED_THIS_YEAR_1",
-//         "label": "Reservoir Spilled this year_1",
-//         "type": "Text",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "SPILLED_THIS_YEAR_2",
-//         "label": "Reservoir Spilled this year_2",
-//         "type": "Text",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "STOCK_WATERING",
-//         "label": "Stock watering",
-//         "type": "Text",
-//         "table": "currentUseOfWater",
-//         "section": "currentUseOfWater"
-//     },
-//     {
-//         "column": "TOTAL_ACRES_IRRIGATED",
-//         "label": "Total Acres irrigated",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_DOMESTIC",
-//         "label": "Total Persons",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_DUST_CONTROL",
-//         "label": "Total Dust Control",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_FIRE_PROTECTION",
-//         "label": "TOTAL FiRE PROTECTION",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_FISH_CULTURE",
-//         "label": "Total  Fish Culture",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_FROST_PROTECTION",
-//         "label": "Total Frost Protection",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_HEAT_PROTECTION",
-//         "label": "Total Heat Protection",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "storage"
-//     },
-//     {
-//         "column": "TOTAL_INDUSTRIAL",
-//         "label": "Total Industrial",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "TOTAL_MILLING",
-//         "label": "Total MILLING",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "TOTAL_MINING",
-//         "label": "Total Mining",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "TOTAL_MUNICIPAL",
-//         "label": "Total Population",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "TOTAL_RECREATION",
-//         "label": "Total Nature of use",
-//         "type": "Text",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "TOTAL_SNOW_MAKING",
-//         "label": "Total Snow making",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": ""
-//     },
-//     {
-//         "column": "TOTAL_STOCK_WATERING",
-//         "label": "Total stock watering",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "USE_TYPE_CHANGE",
-//         "label": "Intake location change",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "conservationOfWater"
-//     },
-//     {
-//         "column": "USE_TYPE_CHANGE_DESC",
-//         "label": "Remarks",
-//         "type": "Text",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "WATER_CONSERVATION",
-//         "label": "Water Conservation ",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "WATER_CONSERVE_DESC",
-//         "label": "Water Conservation desc",
-//         "type": "Text",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "WATER_USED_EACH_MONTH_IN_AF",
-//         "label": "Water Used IN Acre-Feet",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "WATER_USED_EACH_MONTH_IN_GALLONS",
-//         "label": "Water Used IN Gallons",
-//         "type": "Check Box",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "CONJUNCTIVE_AMOUNT",
-//         "label": "Amount of groundwater used",
-//         "type": "Numeric",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "CONJUNCTIVE_AMOUNT_UNIT",
-//         "label": "Amount of groundwater used UNITS",
-//         "type": "Text",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     },
-//     {
-//         "column": "CONJUNCTIVE_USE",
-//         "label": "using groundwater in lieu of available surface water authorized under your permit?",
-//         "type": "Text",
-//         "table": "",
-//         "section": "wasteWaterReclaimation"
-//     }
-// ]
-
   profileDetails: any = null;
   allFieldsFromProfileDetails: any = [];
-
-
   licenseReportsJson: any = [];
-
   reportsOfLicenseFields: any [];
   reportsForm: FormGroup;
-  // progressReportFields = [
-  //   {
-  //       "column": "APPLICATION_NUMBER",
-  //       "label": "APPLICATION",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "COMPLETELY_EMPTY",
-  //       "label": "Emptied Reservoir",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "DOMESTIC",
-  //       "label": "Domestic",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "INDUSTRIAL",
-  //       "label": "Industrial",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "INSTALLED_CAPACITY",
-  //       "label": "Installed Capacity",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "INTAKE_LOCATION_CHANGE",
-  //       "label": "Intake Location",
-  //       "type": "Text",
-  //   },
-  //   {
-  //       "column": "IRRIGATION",
-  //       "label": "Irrigation",
-  //       "type": "Text",
-  //   },
-  //   {
-  //       "column": "MINING",
-  //       "label": "Mining",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "MUNICIPAL",
-  //       "label": "Municipal",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "NUMBER_OF_CROPS",
-  //       "label": "Number of crops",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "PERMIT_ID",
-  //       "label": "PERMIT",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "POU_CHANGE",
-  //       "label": "Place of Use Change",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "POWER_GENERATION",
-  //       "label": "Power",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "PRIMARY_OWNER_NAME",
-  //       "label": "Name of present Owner of permit",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "RECREATION",
-  //       "label": "Recreation",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "REQUEST_REVOCATION",
-  //       "label": "Project been abandoned",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "SOURCE_OF_WATER",
-  //       "label": "SOURCE",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "STOCK_WATERING",
-  //       "label": "Stock Watering",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "TOTAL_ACRES_IRRIGATED",
-  //       "label": "Total Acres Irrigated",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_AMOUNT_DIRECT",
-  //       "label": "Amount Of water Used",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_DOMESTIC",
-  //       "label": "Specify Number of Persons, lawn/garden area, etc.",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_INDUSTRIAL",
-  //       "label": "Nature OF Use",
-  //       "type": "Text"
-  //   },
-  //   {
-  //       "column": "TOTAL_MINING",
-  //       "label": "TYpe of Mining",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_MUNICIPAL",
-  //       "label": "Approximate Population",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_RECREATION",
-  //       "label": "Specify boating, fishing, water contact sport, etc",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TOTAL_STOCK_WATERING",
-  //       "label": "Number of Animals",
-  //       "type": "Numeric"
-  //   },
-  //   {
-  //       "column": "TYPES_OF_CROPS",
-  //       "label": "types of Crops",
-  //       "type": "Text"
-  //   }
-  // ];
-
   reportsOfLicenseFiltered: any = [];
-  currentUseOfWaterTable: any = []
+  fullTableArray: any = []
   currentAmountsOfWaterDivertedTable: any = [];
   tabsList: any = [];
   tableList: any = [];
-
-  selectedTable = '';
+  selectedTableNames = [];
   shouldDisplayForm = false;
   sectionList = [];
+  documentType = null;
+  profileId = null;
+  @Output() documentTypeEvent = new EventEmitter<string>();
   // @HostListener('window:message', ['$event'])
   // onClientLoadedAndWindowClosed(event: any): void {
   //   console.log(event.data)
@@ -788,9 +117,11 @@ export class MapsFieldsComponent implements OnInit {
       this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
       //this.profileDetails = this.docService.getProfileDetails2();
       console.log(this.profileDetails, this.licenseReportsJson);
-     
+      this.documentType = this.licenseReportsJson['docType'];
+      this.profileId = this.licenseReportsJson['profile_id'];
+      this.documentTypeChanged(this.documentType);
       this.populateReportsOfLicenseFieldsUsingProfileDetails();
-      this.currentUseOfWaterTable = [];
+      this.fullTableArray = [];
       this.currentAmountsOfWaterDivertedTable = [];
       
       let tempArray = [] as any;
@@ -805,19 +136,23 @@ export class MapsFieldsComponent implements OnInit {
     }    
   }
 
+  documentTypeChanged(value: string) {
+    this.documentTypeEvent.emit(value);
+  }
+
   tabChanged(e: any) {
   
     this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['tab'] === e.tab.textLabel)
+    this.selectedTableNames = [];
+    this.fullTableArray = [];
     for(let i = 0; i < this.tableList.length; i++) {
-      if(e.tab.textLabel.includes(this.tableList[i].name)) {
-        this.selectedTable = this.tableList[i].name;
-        this.currentUseOfWaterTable = this.tableList[i].table;
-        console.log(this.currentUseOfWaterTable);
+      if(e.tab.textLabel.includes(this.tableList[i].section)) {
+        this.selectedTableNames.push(this.tableList[i].name);
+        this.fullTableArray.push([...this.tableList[i].table]);
+        console.log(this.fullTableArray);
         this.onClickInInput(this.tableList[i].full_table);
-        break;
+        //break;
         //TO DO: Need to give each table a name
-      } else {
-        this.selectedTable = '';
       }
     }
     
@@ -837,9 +172,10 @@ export class MapsFieldsComponent implements OnInit {
   }
 
   async ngOnChanges() {
+    
     if(this.selectedDoc === 'LicenseReports') {
      
-      //console.log(this.reportsOfLicenseFiltered, this.currentUseOfWaterTable,  this.currentAmountsOfWaterDivertedTable);
+      //console.log(this.reportsOfLicenseFiltered, this.fullTableArray,  this.currentAmountsOfWaterDivertedTable);
     } else if(this.selectedDoc === 'DiversionLicense') {
       this.licenseReportsJson = await this.docService.getExtractedJson(this.vaultDocId).toPromise();
       this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
@@ -847,7 +183,7 @@ export class MapsFieldsComponent implements OnInit {
       console.log(this.profileDetails, this.licenseReportsJson);
       this.shouldDisplayForm = true;
       this.populateReportsOfLicenseFieldsUsingProfileDetails();
-      this.currentUseOfWaterTable = [];
+      this.fullTableArray = [];
       this.currentAmountsOfWaterDivertedTable = [];
       
       let tempArray = [] as any;
@@ -859,7 +195,7 @@ export class MapsFieldsComponent implements OnInit {
           "textLabel": this.tabsList[0]
         }
       })
-      //console.log(this.reportsOfLicenseFiltered, this.currentUseOfWaterTable,  this.currentAmountsOfWaterDivertedTable);
+      //console.log(this.reportsOfLicenseFiltered, this.fullTableArray,  this.currentAmountsOfWaterDivertedTable);
     }
   }
 
@@ -889,47 +225,54 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['tab'] = 'Summary';
       }
 
-      if(allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature') {
-        allresults[i]['section'] = 'P2';
-      }
 
-      // if(allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'License Id'
-      // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'Primary Owner') {
-      //   allresults[i]['section'] = 'Summary';
+      //HARDCODED SECTION STARTS
+
+      // //this.licenseReportsJson['doc_type'] === '' && 
+      // if((allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature')) {
+      //   allresults[i]['section'] = 'P2';
       // }
 
-      // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms' || allresults[i]['display_label'] === 'Request Revocation'
-      // || allresults[i]['display_label'] === 'Remarks') {
+      // // if(allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'License Id'
+      // // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'Primary Owner') {
+      // //   allresults[i]['section'] = 'Summary';
+      // // }
+
+      // // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms' || allresults[i]['display_label'] === 'Request Revocation'
+      // // || allresults[i]['display_label'] === 'Remarks') {
+      // //   allresults[i]['section'] = 'Compliance';
+      // // }
+
+      // if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
+      // || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
+      //   allresults[i]['section'] = 'Applicant Details';
+      // }
+
+      // if(allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'POD Id' || allresults[i]['display_label'] === 'Storage Season'
+      // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'Use Net Acreage' || allresults[i]['display_label'] === 'Purpose Of Water Used'
+      // || allresults[i]['display_label'] === 'Diversion Season' || allresults[i]['display_label'] === 'Request Revocation' || allresults[i]['display_label'] === 'Max Collection to  Storage' || allresults[i]['display_label'] === 'Water Right Face Value') {
+      //   allresults[i]['section'] = 'License Summary';
+      //   //allresults[i]['tab'] = 'Claim Credit For Groundwater';
+      // }
+
+      // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
+      // || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks') {
       //   allresults[i]['section'] = 'Compliance';
       // }
 
-      if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
-      || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
-        allresults[i]['section'] = 'Applicant Details';
-      }
+      // if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
+      //   allresults[i]['section'] = 'P2';
+      // }
 
-      if(allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'POD Id'
-      || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'Use Net Acreage' || allresults[i]['display_label'] === 'Purpose Of Water Used'
-      || allresults[i]['display_label'] === 'Diversion Season' || allresults[i]['display_label'] === 'Request Revocation' || allresults[i]['display_label'] === 'Max Collection to  Storage' || allresults[i]['display_label'] === 'Water Right Face Value') {
-        allresults[i]['section'] = 'License Summary';
-      }
+      // if(allresults[i]['display_label'] === 'Reclaimed Water') {
+      //   allresults[i]['section'] = 'P2';
+      // }
 
-      if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
-      || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks') {
-        allresults[i]['section'] = 'Compliance';
-      }
+      // if(allresults[i]['display_label'] === 'Conjuctive Use') {
+      //   allresults[i]['section'] = 'P2';
+      // }
 
-      if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
-        allresults[i]['section'] = 'P2';
-      }
-
-      if(allresults[i]['display_label'] === 'Reclaimed Water') {
-        allresults[i]['section'] = 'P2';
-      }
-
-      if(allresults[i]['display_label'] === 'Conjuctive Use') {
-        allresults[i]['section'] = 'P2';
-      }
+      //HARDCODED SECTION ENDS
 
     }
 
@@ -955,7 +298,6 @@ export class MapsFieldsComponent implements OnInit {
           let tempV = values[valueKeys[i]]['KV'][j];
           if(tempV && Object.keys(values[valueKeys[i]]['KV'][j]).length != 0) {
             let seObjKeys = Object.keys(values[valueKeys[i]]['KV'][j]);
-            console.log(seObjKeys);
             for(let k = 0; k < seObjKeys.length; k++) {
               if(!knownKeys.includes(seObjKeys[k])) {
                 values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[k]];
@@ -1031,7 +373,34 @@ export class MapsFieldsComponent implements OnInit {
 
 
 
-              //Addition FOR Profile 1
+
+
+
+              //For profiles where headers are not being passed
+              //Adding a check to see if headers are passed
+              if(headings.length === 4) {
+                let count = headings.filter(e => Number(e) > 1000).length;
+                let count2 = headings.filter(e => e === '').length;
+                if(count === 0) {
+                  let temp;
+                  count2 != 3 ? rows.unshift(headings) : temp = headings[0];
+                  if (retArray[retArray.length - 1]['table'] != undefined) {
+                    headings = retArray[retArray.length - 1]['table'][0];
+                    headings[0] = count2 != 3 ? '': temp;
+                  } else {
+                    headings = ['', '2007', '2008', '2009'];
+                    count2 != 3 ? headings[0] = '': headings[0] = temp;
+                  }
+                }
+              }
+
+
+
+
+
+
+
+              //Addition FOR Profile 1. Does not suit some profiles where headers are not being passed
               //GETS Rid of empty spaces from headers and also from the corresponding rows
               // headings = headings.filter((element, i) => {
               //   if(i === 0) {
@@ -1039,7 +408,6 @@ export class MapsFieldsComponent implements OnInit {
               //   }
               //   return element !== '';              
               // });
-
               for(let l = headings.length - 1; l >= 0; l--) {
                 if(headings[l] === '' && l != 0) {
                   headings.splice(l, 1)
@@ -1066,8 +434,7 @@ export class MapsFieldsComponent implements OnInit {
 
 
 
-
-              rows.unshift(headings)
+              rows.unshift(headings);
               if(headings.length != 4) {
                 rows = this.transpose(rows);
               }
@@ -1075,9 +442,7 @@ export class MapsFieldsComponent implements OnInit {
 
 
 
-
-
-
+              
 
               //Addition FOR Profile 3
               for(let m = 1; m < rows[0].length; m++) {
@@ -1092,6 +457,8 @@ export class MapsFieldsComponent implements OnInit {
 
               
 
+              
+
 
 
 
@@ -1101,7 +468,7 @@ export class MapsFieldsComponent implements OnInit {
               
 
               console.log(rows);
-            
+          //NOW DONE BELOW
               // let tempFormGroup: any = {};
               // for(let i = 1; i < rows.length; i++) {
               //   for(let j = 1; j < rows[i].length; j++) {
@@ -1120,12 +487,24 @@ export class MapsFieldsComponent implements OnInit {
               //   this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
               // }
               // console.log(tempFormGroup);
-             
+
+
+              //HARDCODED SECTION STARTS //this.licenseReportsJson['doc_type'] === '' && 
+              let name = values[valueKeys[i]]['TE'][j]['display_label'];
+
+              if(name === 'Claim Credit For Groundwater' || name === 'Claim Credit For Substitution' || name === 'Conservation Amount') {
+                values[valueKeys[i]]['TE'][j]['section'] = 'Claim Credit For Groundwater';
+              } else {
+                values[valueKeys[i]]['TE'][j]['section'] = name;
+              }
+
+              //HARDCODED SECTION ENDS
               console.log(headings, rows, rows.length, rows[0].length)
               retArray.push({
                 "display_label": values[valueKeys[i]]['TE'][j]['display_label'],
                 "table": rows,
-                "page": i + 1
+                "page": i + 1,
+                "section": values[valueKeys[i]]['TE'][j]['section']
               })
               // this.tableList.push({
               //   "name": values[valueKeys[i]]['TE'][j]['display_label'],
@@ -1162,8 +541,8 @@ export class MapsFieldsComponent implements OnInit {
           console.log(retArray[i]);
           temp['display_value'] = retArray[i]['table'];
           temp['page'] = retArray[i]['page'];
-
-
+          temp['section'] = retArray[i]['section'];
+          
 
           let tempFormGroup: any = {};
           for (let a = 1; a < retArray[i]['table'].length; a++) {
@@ -1198,21 +577,47 @@ export class MapsFieldsComponent implements OnInit {
           this.tableList.push({
             "name": retArray[i]['display_label'],
             "table": retArray[i]['table'],
-            "full_table": temp
+            "section": retArray[i]['section'],
+            "full_table": temp,
           });
-        } else {
-          alert()
         }
       }   
       //m.set(this.allFieldsFromProfileDetails[i]['display_label'], this.allFieldsFromProfileDetails[i])
     }
 
+    //HARD CODED SECTION BEGINS - Creates a table from LicenseOfSummary
+    if(this.documentType.includes('Report Of Licensee')) {
+      let newTable = this.changesToLicenseSummary();
+      newTable['name'] = 'LicenseToSummaryTable';
+      newTable['table'] = newTable.rows;
+      newTable['section'] = 'Summary';
+      newTable['full_table'] = newTable;
+  
+      let newTempFormGroup = {};
+      for (let a = 1; a < newTable['table'].length; a++) {
+        for (let b = 0; b < newTable['table'][a].length; b++) {
+          newTempFormGroup[newTable['table'][a].length * a + b] = new FormControl(newTable['table'][a][b]);
+        }
+      }
+      let newkey =  newTable['name'];
+      
+      let newtemFbGroup = {};
+      newtemFbGroup[newkey] = new FormGroup(newTempFormGroup)
+      if(this.reportsForm === undefined) {
+        this.reportsForm = this.fb.group(newtemFbGroup)
+      } else {
+        this.reportsForm.addControl(newkey, this.fb.group(newTempFormGroup))
+      }
+      this.tableList.push(newTable);
+    }    
+    //HARD CODED SECTION ENDS
 
     this.tabsList = ["Summary"];
     
 
     this.tableList.forEach(element => {
-      this.tabsList.push(element.name);
+      if(!this.tabsList.includes(element.section))
+        this.tabsList.push(element.section);
     });
     
 
@@ -1238,11 +643,14 @@ export class MapsFieldsComponent implements OnInit {
     });
 
 
-    let key = this.selectedDoc;
+    let key = this.documentType;
     if(this.reportsForm === undefined) {
-      this.reportsForm = this.fb.group({
-        key: new FormGroup(tempFormGroup)
-      })
+      let tempParFormGroup = {};
+      tempParFormGroup[key] = new FormGroup(tempFormGroup)
+      this.reportsForm = this.fb.group(tempParFormGroup) 
+      // this.reportsForm = this.fb.group({
+      //   key: new FormGroup(tempFormGroup)
+      // })
     } else {
       this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
     }
@@ -1260,6 +668,71 @@ export class MapsFieldsComponent implements OnInit {
     //Put all these together (KV, SE) Keep TE separate as a new attribute called tables: [TE1, TE2, ..] in licenseOfReportsFields
 
     console.log(retArray);
+  }
+
+  changesToLicenseSummary() {
+    let newHeadings;
+    let namesToCompareAgainst = [];
+    if(this.profileId === 0 || this.profileId === 1) {
+      newHeadings = ['Licensed Uses of Water', 'Acres', 'Direct Diversion Season', 'Collection To Storage Season']
+      namesToCompareAgainst = ['Use Net Acreage', 'Diversion Season', 'Storage Season']
+    }
+    if(this.profileId === 2 || this.profileId === 3 || this.profileId === 4) {
+      newHeadings = ['Licensed Uses of Water', 'Acres', 'Diversion/Storage Season']
+      namesToCompareAgainst = ['Use Net Acreage', 'Diversion/Storage Season',]
+    }
+    if(this.profileId === 5 || this.profileId === 6 || this.profileId === 7 || this.profileId === 8) {
+      newHeadings = ['Licensed Uses of Water', 'Acres']
+      namesToCompareAgainst = ['Use Net Acreage']
+    }
+   
+   
+    let rows = []
+    for(let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
+      let name = this.allFieldsFromProfileDetails[i]['display_label']
+      if(name === 'Purpose Of Water Used' || name === 'Purpose Of Water Used') {
+        if(this.allFieldsFromProfileDetails[i]['display_value']) {
+          let separateValues = this.allFieldsFromProfileDetails[i]['display_value'].split('|');
+          const numOfRows = separateValues.length;
+  
+          for(let j = 0; j < numOfRows; j++) {
+            let newRow = [];
+            newRow.push(separateValues[j])
+            rows.push(newRow);
+          }
+        }     
+      }
+    }
+    
+    for (let index = 0; index < namesToCompareAgainst.length; index++) {
+      for (let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
+        let name = this.allFieldsFromProfileDetails[i]['display_label']
+        if (name === namesToCompareAgainst[index]) {
+          let separateValues = [];
+          if (this.allFieldsFromProfileDetails[i]['display_value']) {
+            separateValues = this.allFieldsFromProfileDetails[i]['display_value'].split('|');
+            if (separateValues[0].includes('month/day')) {
+              separateValues.splice(0, 1);
+            }
+          }
+          for (let j = 0; j < rows.length; j++) {
+            if (separateValues[j]) {
+              rows[j].push(separateValues[j])
+            } else {
+              rows[j].push('')
+            }
+          }
+        }
+      }
+    }
+
+    rows.unshift(newHeadings)
+    console.log(newHeadings, rows);
+    return {
+      "rows": rows,
+      "headings": newHeadings
+    }
+    
   }
 
   completeForm() {
