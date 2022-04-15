@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack://ith/./polyfills.js"],"names":["Promise","toString","indexOf","window","ResizeObserver","default"],"mappings":"8FAAA,cAQsB,oBAAZA,UAA4E,IAAjDA,QAAQC,WAAWC,QAAQ,yBACvDC,OAAOH,QAKhB,EAAQ,MACR,EAAQ,WAG4B,IAA1BG,OAAOC,iBACfD,OAAOC,eAAiB,EAAQ,KAA4BC","file":"ith-polyfills.js","sourceRoot":""}
