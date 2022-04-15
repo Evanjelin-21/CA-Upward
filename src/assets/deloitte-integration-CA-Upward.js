@@ -58,7 +58,7 @@ var uploadNewButton;
 // uploadNewButton.style.display = "none"
 // uploadVersionButton.style.display = "none"
 
-//spinnerDiv = document.getElementById("spin")
+spinnerDiv = document.getElementById("spin")
 
 var ithInstanceDiv; //= document.getElementById("ithParent")
 var ithErrorDiv; //= document.getElementById("ithError")
@@ -150,6 +150,7 @@ function startExec(vaultId, token) {
 
 
   spinnerDiv = document.getElementById("spin")
+  spinnerDiv.style.display = "none"
 
   ithInstanceDiv = document.getElementById("ithParent")
   ithInstanceDiv.style.border = "1px dashed";
@@ -202,7 +203,7 @@ function startExec(vaultId, token) {
   // }
 
   if (!hasLoadingFailed) {
-    ithExamplesConfig.ThemeConfiguration = { base: '#6ec01b' };
+    ithExamplesConfig.ThemeConfiguration = { base: '#104f7d' };
     // ith.createInstance(document.getElementById("ithContainer"), ithExamplesConfig)
     //ith.createInstance(document.getElementById('TCContainer'), ithExamplesConfig)
     ith.createInstance(document.getElementById("imageTrustDiv"), ithExamplesConfig)
@@ -227,7 +228,7 @@ function startExec(vaultId, token) {
   //   // create Transactional Client
 
   //   if (!hasLoadingFailed) {
-  //     ithExamplesConfig.ThemeConfiguration = {base: '#6ec01b'};
+  //     ithExamplesConfig.ThemeConfiguration = {base: '#104f7d'};
   //     // ith.createInstance(document.getElementById("ithContainer"), ithExamplesConfig)
   //     //ith.createInstance(document.getElementById('TCContainer'), ithExamplesConfig)
   //     ith.createInstance(document.getElementById("ithContainer"), ithExamplesConfig)
@@ -357,10 +358,12 @@ function validateAndLoadDocument(batch) {
         let button2 = document.getElementById('fit-width')
         button2.click();
         button.dispatchEvent(new Event('mouseleave'));
+        folderDiv[0].style.display = "block"
+        spinnerDiv.style.display = "none"
         //changeToFitPage();
       }).catch(function () {
         alert("Failed to load doc ")
-        // spinnerDiv.style.display = "none"
+        spinnerDiv.style.display = "none"
         // hasLoadingFailed = true
         // //uploadNewButton.style.display = "none"
         // uploadVersionButton.style.display = "none"
@@ -372,7 +375,7 @@ function validateAndLoadDocument(batch) {
 
     }).catch(function () {
       alert("Failed to get url")
-      // spinnerDiv.style.display = "none"
+      spinnerDiv.style.display = "none"
       // hasLoadingFailed = true
       // ithInstanceDiv.style.display = "none"
       // ithErrorDiv.style.display = "block"
@@ -763,7 +766,7 @@ function transactionalClientCreated(dispatch) {
   //iframe.postMessage(JSON.stringify(iframe), "*")
   console.log("Trasactional Client loaded.");
 
-  //spinnerDiv.style.display = "" //DO
+  spinnerDiv.style.display = "block" //DO
   // install some helpful type in the global scope
   ithInstance.installGlobalTypes("ith_");
   ithInstance.JobEvents.batchStructureChanged = onBatchStructureChanged;  //DO
@@ -811,7 +814,7 @@ function init() {
     //ithInstance.setLevelName(ith_LevelName.Document, "${customname}");
     //Hide the folder div while the documents are loading
     folderDiv = document.getElementsByClassName('itw-folderViewer')
-    // folderDiv[0].style.display = "none"
+    folderDiv[0].style.display = "none"
 
     // load the document onto the viewer
     validateAndLoadDocument(batch);
@@ -842,9 +845,9 @@ function performHtmlChanges() {
   if (itwEndSide != undefined) {
     let child = `<h1 class="row" style="align-self: center;">
 
-      <button class="button" id="upload-version" onclick="uploadAsVersionHandler()" style="display: block; background-color: #6ec01b; color: white">Complete</button>
-      <button class="button" id="save-document" onclick="saveHandler()" style="background-color: #6ec01b; color: white">Save</button>
-      <button class="button" id="cancel-redact" onclick="cancelHandler()" style="background-color: #6ec01b; color: white">Back</button>
+      <button class="button" id="upload-version" onclick="uploadAsVersionHandler()" style="display: block; background-color: #104f7d; color: white">Complete</button>
+      <button class="button" id="save-document" onclick="saveHandler()" style="background-color: #104f7d; color: white">Save</button>
+      <button class="button" id="cancel-redact" onclick="cancelHandler()" style="background-color: #104f7d; color: white">Back</button>
       <span style="float: right;font-size: medium;" id="dropdown"></span>
     </h1>`
     itwEndSide.innerHTML = child + itwEndSide.innerHTML;
@@ -855,12 +858,12 @@ function performHtmlChanges() {
     console.log('exists')
     console.log(itwFolderViewerHeader);
     for (let i = 0; i < itwFolderViewerHeader.length; i++) {
-      itwFolderViewerHeader[i].style['background-color'] = "#6ec01b"
+      itwFolderViewerHeader[i].style['background-color'] = "#104f7d"
     }
 
   }
   if (itwSearchButton != undefined) {
-    itwSearchButton.style['background-color'] = "#6ec01b"
+    itwSearchButton.style['background-color'] = "#104f7d"
   }
   if (itwIconQueue != undefined) {
     itwIconQueue.style['fill'] = "black !important"
@@ -885,13 +888,13 @@ function performHtmlChanges() {
   }
 
   if (itwIconMagnifyingGlass != undefined) {
-    itwIconMagnifyingGlass.style['fill'] = "#6ec01b"
-    itwIconMagnifyingGlass.style['stroke'] = "#6ec01b"
+    itwIconMagnifyingGlass.style['fill'] = "#104f7d"
+    itwIconMagnifyingGlass.style['stroke'] = "#104f7d"
   }
 
   for (let i = 0; i < itwTab.length; i++) {
     if (itwTab[i] != undefined) {
-      itwTab[i].style['color'] = "#6ec01b"
+      itwTab[i].style['color'] = "#104f7d"
     }
     if (i == 1) {
       itwTab[i].addEventListener('click', changeToFitPage)
@@ -899,7 +902,7 @@ function performHtmlChanges() {
   }
 
   if (itwFolderViewer != undefined) {
-    itwFolderViewer.style['border-top'] = "1px solid #6ec01b"
+    itwFolderViewer.style['border-top'] = "1px solid #104f7d"
   }
 
   uploadVersionButton = document.getElementById("upload-version")
@@ -1672,7 +1675,7 @@ async function getDocURL(token, vaultdocId) {
   }
   console.log(header);
   return new Promise(async function (resolve, reject) {
-    var url = 'https://internal-docuedge-vault-api-alb-1366302947.us-west-2.elb.amazonaws.com/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
+    var url = 'https://upward-docuedgevault.deloitte.com/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
     const response = await fetch(url, { headers: header })
     const data = await response.json()
     console.log("Response", data)

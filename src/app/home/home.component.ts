@@ -106,6 +106,14 @@ export class HomeComponent implements OnInit {
      
   }
 
+  saveForm() {
+    console.log('Saving...')
+  }
+
+  cancel() {
+    console.log('Cancelling...')
+  }
+
   addDocumentType(type) {
     this.documentType = type;
   }

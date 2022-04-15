@@ -40,6 +40,7 @@ export class MapsFieldsComponent implements OnInit {
   sectionList = [];
   documentType = null;
   profileId = null;
+  //tableSection = null;
   @Output() documentTypeEvent = new EventEmitter<string>();
   // @HostListener('window:message', ['$event'])
   // onClientLoadedAndWindowClosed(event: any): void {
@@ -63,24 +64,7 @@ export class MapsFieldsComponent implements OnInit {
   //   //   this.onHideDocList(false);
   //   // }
   // }
-
-
   
-  diversionLicenseFields = [
-    new field('APPLICATION_NUMBER', 'Application', 'Text'),
-    new field('PERMIT_ID', 'Permit', 'Text'),
-    new field('LICENSE_ID', 'License', 'Text'),
-    new field('USE_CODE', 'for the purpose of', 'Text'),
-    new field('DATE_OF_INSPECTION', 'Proof as of', 'DateStamp'),
-  ]
-
-  appropriateUnapFields = [
-    new field('APPLICATION_NUMBER', 'APPLICATION NO.', 'Text'),
-    new field('APPLICATION_ACCEPTANCE_DATE', 'Filed', 'Timestamp'),
-    new field('DIRECT_DIV_SEASON_START', 'Beginning Date', 'Text'),
-    new field('DIRECT_DIV_SEASON_END', 'Closing Date', 'Text'),
-    new field('COUNTY', 'County of', 'Text'),
-  ]
 
   @Input() selectedDoc = 'Maps';
   @Input() vaultDocId = '';
@@ -122,6 +106,7 @@ export class MapsFieldsComponent implements OnInit {
       this.documentTypeChanged(this.documentType);
       this.populateReportsOfLicenseFieldsUsingProfileDetails();
       this.fullTableArray = [];
+      //this.tableSection = null;
       this.currentAmountsOfWaterDivertedTable = [];
       
       let tempArray = [] as any;
@@ -145,17 +130,28 @@ export class MapsFieldsComponent implements OnInit {
     this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['tab'] === e.tab.textLabel)
     this.selectedTableNames = [];
     this.fullTableArray = [];
+    //this.tableSection = null;
     for(let i = 0; i < this.tableList.length; i++) {
       if(e.tab.textLabel.includes(this.tableList[i].section)) {
         this.selectedTableNames.push(this.tableList[i].name);
+        console.log(this.selectedTableNames);
+        //this.tableSection = this.tableList[i].section;
         this.fullTableArray.push([...this.tableList[i].table]);
         console.log(this.fullTableArray);
+        // if(this.tableList[i].tab != 'Summary') {
+        //   this.sectionList = ['Main Section'];
+        // } else {
+        //   this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
+        // }
         this.onClickInInput(this.tableList[i].full_table);
         //break;
         //TO DO: Need to give each table a name
       }
     }
     
+    // if(this.selectedTableNames.length === 0) {
+    //   this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
+    // }
     // this.
     // this.reportsOfLicenseFiltered.forEach((element: any) => {
     //   if()
@@ -318,17 +314,18 @@ export class MapsFieldsComponent implements OnInit {
             let seObjKeys = Object.keys(values[valueKeys[i]]['SE'][j]);
             if(seObjKeys.length != 0) {
               for (const [key, value] of Object.entries(values[valueKeys[i]]['SE'][j][seObjKeys[0]])) {
-                if(key.toLowerCase() === 'yes') {
+                if(!knownKeys.includes(key)) {
                   if(value === 'SELECTED') {
-                    values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = true;
+                    values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = key.toLowerCase() === 'no' ? false : true;
                     let tempV = values[valueKeys[i]]['SE'][j][seObjKeys[0]]
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
                   } else {
-                    values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = false; 
+                    values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = key.toLowerCase() === 'no' ? true : false; 
                     let tempV = values[valueKeys[i]]['SE'][j][seObjKeys[0]]
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
                   }
                   values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page'] = i + 1;
+                  break;
                 }
               }
               retArray.push(values[valueKeys[i]]['SE'][j][seObjKeys[0]])
@@ -494,8 +491,10 @@ export class MapsFieldsComponent implements OnInit {
 
               if(name === 'Claim Credit For Groundwater' || name === 'Claim Credit For Substitution' || name === 'Conservation Amount') {
                 values[valueKeys[i]]['TE'][j]['section'] = 'Claim Credit For Groundwater';
+                //values[valueKeys[i]]['TE'][j]['tab'] = 'Claim Credit For Groundwater';
               } else {
                 values[valueKeys[i]]['TE'][j]['section'] = name;
+                //values[valueKeys[i]]['TE'][j]['tab'] = name;
               }
 
               //HARDCODED SECTION ENDS
@@ -504,7 +503,8 @@ export class MapsFieldsComponent implements OnInit {
                 "display_label": values[valueKeys[i]]['TE'][j]['display_label'],
                 "table": rows,
                 "page": i + 1,
-                "section": values[valueKeys[i]]['TE'][j]['section']
+                "section": values[valueKeys[i]]['TE'][j]['section'],
+                //"tab": values[valueKeys[i]]['TE'][j]['tab']
               })
               // this.tableList.push({
               //   "name": values[valueKeys[i]]['TE'][j]['display_label'],
@@ -517,7 +517,7 @@ export class MapsFieldsComponent implements OnInit {
       
     }
 
-    const m = new Map();
+    let m = new Map();
     for(let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
       m.set(this.allFieldsFromProfileDetails[i]['display_label'], this.allFieldsFromProfileDetails[i])
     }
@@ -542,7 +542,7 @@ export class MapsFieldsComponent implements OnInit {
           temp['display_value'] = retArray[i]['table'];
           temp['page'] = retArray[i]['page'];
           temp['section'] = retArray[i]['section'];
-          
+          //temp['tab'] = retArray[i]['tab'];
 
           let tempFormGroup: any = {};
           for (let a = 1; a < retArray[i]['table'].length; a++) {
@@ -578,6 +578,7 @@ export class MapsFieldsComponent implements OnInit {
             "name": retArray[i]['display_label'],
             "table": retArray[i]['table'],
             "section": retArray[i]['section'],
+            //"tab": retArray[i]['tab'],
             "full_table": temp,
           });
         }
@@ -587,10 +588,13 @@ export class MapsFieldsComponent implements OnInit {
 
     //HARD CODED SECTION BEGINS - Creates a table from LicenseOfSummary
     if(this.documentType.includes('Report Of Licensee')) {
-      let newTable = this.changesToLicenseSummary();
+      let newTable = this.changesToLicenseSummary(m);
+      m = new Map(newTable['newMap']);
+      delete newTable.newMap;
       newTable['name'] = 'LicenseToSummaryTable';
       newTable['table'] = newTable.rows;
       newTable['section'] = 'Summary';
+      //newTable['tab'] = 'Summary';
       newTable['full_table'] = newTable;
   
       let newTempFormGroup = {};
@@ -618,6 +622,8 @@ export class MapsFieldsComponent implements OnInit {
     this.tableList.forEach(element => {
       if(!this.tabsList.includes(element.section))
         this.tabsList.push(element.section);
+      // if(!this.tabsList.includes(element.tab))
+      //   this.tabsList.push(element.tab);
     });
     
 
@@ -670,7 +676,7 @@ export class MapsFieldsComponent implements OnInit {
     console.log(retArray);
   }
 
-  changesToLicenseSummary() {
+  changesToLicenseSummary(m) {
     let newHeadings;
     let namesToCompareAgainst = [];
     if(this.profileId === 0 || this.profileId === 1) {
@@ -690,7 +696,7 @@ export class MapsFieldsComponent implements OnInit {
     let rows = []
     for(let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
       let name = this.allFieldsFromProfileDetails[i]['display_label']
-      if(name === 'Purpose Of Water Used' || name === 'Purpose Of Water Used') {
+      if(name === 'Purpose Of Water Used') {
         if(this.allFieldsFromProfileDetails[i]['display_value']) {
           let separateValues = this.allFieldsFromProfileDetails[i]['display_value'].split('|');
           const numOfRows = separateValues.length;
@@ -700,7 +706,11 @@ export class MapsFieldsComponent implements OnInit {
             newRow.push(separateValues[j])
             rows.push(newRow);
           }
-        }     
+        } 
+        this.allFieldsFromProfileDetails.splice(i, 1);
+        if(m.has(name))
+            m.delete(name) 
+        console.log(m);   
       }
     }
     
@@ -722,6 +732,8 @@ export class MapsFieldsComponent implements OnInit {
               rows[j].push('')
             }
           }
+          if(m.has(name))
+            m.delete(name) 
         }
       }
     }
@@ -730,7 +742,8 @@ export class MapsFieldsComponent implements OnInit {
     console.log(newHeadings, rows);
     return {
       "rows": rows,
-      "headings": newHeadings
+      "headings": newHeadings,
+      "newMap": m
     }
     
   }
