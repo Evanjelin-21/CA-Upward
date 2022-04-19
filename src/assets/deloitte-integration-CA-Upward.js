@@ -756,7 +756,7 @@ function changeToFitPage() {
 //DocOperations Functions End
 
 function transactionalClientCreated(dispatch) {
-
+  document.getElementsByClassName('itw-panel itw-bep-panel itw-resizable')[0].style.display = 'none'
   ithInstance = dispatch;
   window.ithInstanceNew = ithInstance;
   performHtmlChanges();
@@ -1546,6 +1546,7 @@ function drawHighlights(pageNum) {
 
 function drawHighlightsUsingBboxes(pageNum, bbox, confidence) {
   ithInstance.clearHighlights();
+  console.log(pageNum, bbox, confidence )
   var hl = ithInstance.highlightZone(bbox.left, bbox.top, bbox.width, bbox.height, pageNum - 1, {
     absolute: false,
     color: confidence != undefined && confidence < 50 ? 'rgba(255,0,0,.2)':'rgba(0,255,0,.2)',

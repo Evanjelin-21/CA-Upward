@@ -6,12 +6,106 @@
                 <mat-tab *ngFor="let tab of tabsList"  [label]="tab"></mat-tab>
             </mat-tab-group>
 
-            <div *ngIf="shouldDisplayForm">
+            <div *ngIf="shouldDisplayForm && shouldAddSections">
+                <form [formGroup]="reportsForm" class="row mt-4">
+                    <div *ngFor="let section of sectionList;">
+                        <div *ngIf="elementsList.children.length > 0" class="row fluid" style="text-align: center;">
+                            <h4>{{section}}</h4>
+                        </div>
+                        <div #elementsList class="row fluid">
+                            <div *ngFor="let field of reportsOfLicenseFiltered | filterPipe:section" style="align-self:center" [formGroupName]="documentType"  [class]="field['columns'] == 1 ? 'col-md-12': field['columns'] == 3 ? 'col-md-4':'col-md-6'">
+                                <!--col-xl-6-->
+                                <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend max-width-labels">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
+                                    </div>
+                                    <input (click)="onClickInInput(field)"
+                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" class="form-control"
+                                        [id]="field['id']" [formControlName]="field['id']">
+                                </div>
+                        
+                                <div *ngIf="field['fieldType']==='Numeric'" class="input-group-sm mb-3 input-group">
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend max-width-labels">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
+                                    </div>
+                                    <input (click)="onClickInInput(field)"
+                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" type="number"
+                                        class="form-control" id="confidenceLevel" name="confidenceLevel">
+                                </div>
+                        
+                                <div *ngIf="field['fieldType']==='checkbox'" class="input-group-sm mb-3 input-group" style>
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend max-width-labels">
+                                        <span [attr.for]="field['id']"
+                                            class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
+                                    </div>
+                                    <div (click)="onClickInInput(field)" class="input-group-prepend"
+                                        style="flex-grow: 1; display: flex; align-items: center; margin-left: 10px;">
+                                        <input class="form-check-input position-static"
+                                            [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                            [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" [id]="field['id']"
+                                            [formControlName]="field['id']" style="width: 20px; margin-top: 0; height: 20px;" type="checkbox"
+                                            [value]="field['display_value']">
+                                    </div>
+                                </div>
+                            </div>                            
+                        </div>
+                        <ng-container *ngIf="tableSection === section">
+
+                            <div class="card col-xl-12" *ngIf="selectedTableNames.length != 0"> <!--m-2-->
+                                <div *ngFor="let table of fullTableArray; let index = index" class="border border-dark mt-2 mb-2">
+                                    
+                                    
+                                    <div *ngFor="let row of table; let i = index" [formGroupName]="selectedTableNames[index]" [style]="i === 0 ? 'background-color: #104f7d; color: white;
+                                    margin: 0;
+                                    text-align: center;':''" class="card-body row p-1 m-0 ">
+                                        
+                                        <ng-container *ngFor="let field of row; let j = index">
+                                            <ng-container *ngIf="selectedTableNames[index] === 'LicenseToSummaryTable'; else elseBlock">
+                                                <div *ngIf="i != 0; else elseBlock1" [class]="profileId === 0 || profileId === 1 || profileId === 2 ? 'col-3 p-1': profileId === 3 || profileId === 4 ? 'col-4 p-1': 'col-6 p-1'">
+                                                    <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
+                                                </div>
+                                            </ng-container>
+                                            
+        
+                                            <ng-template #elseBlock>
+                                                <div *ngIf="i != 0 && j != 0; else elseBlock1" class="col-3 p-1">
+                                                    <input [id]="row.length * i + j" [formControlName]="row.length * i + j" class="form-control" style="font-size: 14px;" [value]="field">
+                                                </div>
+                                            </ng-template>
+                                            
+            
+                                            <ng-template #elseBlock1>
+                                                <div [class]="selectedTableNames[index] === 'LicenseToSummaryTable' ? (profileId === 0 || profileId === 1 || profileId === 2 ? 'col-3': profileId === 3 || profileId === 4 ? 'col-4': 'col-6') : 'col-3'" style="justify-content: center; align-self: center;">
+                                                    <h4 style="margin: 0;">{{field}}</h4>
+                                                </div>
+                                            </ng-template>
+                                            
+                                        </ng-container>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-container>
+
+                        <hr *ngIf="elementsList.children.length > 0"/>
+                    </div>
+                    <!--ngContainer with an if statement comparing section with tableSection-->
+                   
+                    
+                </form>
+            </div>
+
+
+            <div *ngIf="shouldDisplayForm && !shouldAddSections">
                 <form [formGroup]="reportsForm" class="row mt-4">
                     <!-- <div *ngFor="let section of sectionList">
                         <div *ngIf="elementsList.children.length > 0" class="row fluid" style="text-align: center;">
                             <h4>{{section}}</h4>
-                        </div>  | filterPipe:section -->
+                        </div>  | filterPipe:section-->
                         <div #elementsList class="row fluid">
                             <div *ngFor="let field of reportsOfLicenseFiltered" style="align-self:center" [formGroupName]="documentType" class="col-md-6">
                                 <!--col-xl-6-->
@@ -88,6 +182,7 @@
                             </div>
                         </div>
                     </div>
+                    
                 </form>
             </div>
         </div>

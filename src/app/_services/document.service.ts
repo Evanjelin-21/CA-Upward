@@ -3414,8 +3414,7 @@ export class DocumentService {
 
   getProfileDetails(id): Observable<any> {
     console.log(id, this.config.getConfig('extractedJsonUrl'));
-   // var url = 'http://internal-docuedge-capture-alb-274814622.us-west-2.elb.amazonaws.com/entityprofile/0' //+ id; //documentId;
-    var url = this.config.getConfig('profileDetailsUrl') + id //'http://internal-docuedge-capture-alb-274814622.us-west-2.elb.amazonaws.com/entityprofile/' 
+    var url = this.config.getConfig('profileDetailsUrl') + id 
     return this.http.get<any>(url)
         .pipe();
     //return this.profileDetails;

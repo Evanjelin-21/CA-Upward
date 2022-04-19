@@ -10,7 +10,7 @@ export class loginService {
         private config: AppConfig) { }
 
     public login() {
-        var url = this.config.getConfig("signInUrl"); //'http://internal-docuedge-capture-alb-274814622.us-west-2.elb.amazonaws.com/auth/sign-in'
+        var url = this.config.getConfig("signInUrl");
         return this.http.post<any>(url, {"username": "admin", "password": "Deloitte#1"})
             .pipe();
     }

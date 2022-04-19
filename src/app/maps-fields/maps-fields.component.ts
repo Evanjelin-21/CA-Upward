@@ -40,31 +40,9 @@ export class MapsFieldsComponent implements OnInit {
   sectionList = [];
   documentType = null;
   profileId = null;
-  //tableSection = null;
+  tableSection = null;
+  shouldAddSections = true;
   @Output() documentTypeEvent = new EventEmitter<string>();
-  // @HostListener('window:message', ['$event'])
-  // onClientLoadedAndWindowClosed(event: any): void {
-  //   console.log(event.data)
-  //   // if(event.data === 'client loaded') {
-  //   //   event.source.postMessage('RETURNING A MESSAGE', '*')
-  //   // }
-
-  //   let ithInstance = event.data;
-  // console.log(ithInstance);
-  //   // if(event.data.includes('client loaded')) {
-
-  //   // }
-    
-  //   // if(typeof(event.data) == "string" && event.data.includes('loaded')) {
-  //   //   // this.onHideDocList(false);
-  //   //   this.loading = false;
-  //   // }
-
-  //   // if(typeof(event.data) == "string" && event.data.includes('close')) {
-  //   //   this.onHideDocList(false);
-  //   // }
-  // }
-  
 
   @Input() selectedDoc = 'Maps';
   @Input() vaultDocId = '';
@@ -76,22 +54,6 @@ export class MapsFieldsComponent implements OnInit {
     private route: ActivatedRoute) { }
 
   async ngOnInit() {
-
-    // let json = await this.loginSvc.login().toPromise();
-    // if(json['token']) {
-    //   localStorage.setItem('token', json['token']);
-    // }
-    // console.log(window.document.getElementById('sohamiframeid'));
-    // console.log(this.selectedDoc);
-    // this.route.queryParams
-    // .subscribe(params => {
-    //   console.log(params);
-    //   if(params['vaultid']) {
-    //     this.vaultId = params['vaultid'];
-    //   }
-    // });
-
-
     if(this.reportsForm != undefined) {
       this.reportsForm.reset();
     }
@@ -106,7 +68,7 @@ export class MapsFieldsComponent implements OnInit {
       this.documentTypeChanged(this.documentType);
       this.populateReportsOfLicenseFieldsUsingProfileDetails();
       this.fullTableArray = [];
-      //this.tableSection = null;
+      this.tableSection = null;
       this.currentAmountsOfWaterDivertedTable = [];
       
       let tempArray = [] as any;
@@ -130,28 +92,29 @@ export class MapsFieldsComponent implements OnInit {
     this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['tab'] === e.tab.textLabel)
     this.selectedTableNames = [];
     this.fullTableArray = [];
-    //this.tableSection = null;
+    this.tableSection = null;
     for(let i = 0; i < this.tableList.length; i++) {
-      if(e.tab.textLabel.includes(this.tableList[i].section)) {
+      if(e.tab.textLabel.includes(this.tableList[i].tab)) {
         this.selectedTableNames.push(this.tableList[i].name);
         console.log(this.selectedTableNames);
-        //this.tableSection = this.tableList[i].section;
+        this.tableSection = this.tableList[i].section;
         this.fullTableArray.push([...this.tableList[i].table]);
         console.log(this.fullTableArray);
-        // if(this.tableList[i].tab != 'Summary') {
-        //   this.sectionList = ['Main Section'];
-        // } else {
-        //   this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
-        // }
+        if(this.tableList[i].tab != 'Summary') {
+          this.sectionList = this.tableList[i].sectionList ? this.tableList[i].sectionList : ['Main Section'];
+        } else {
+          this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+        }
+        console.log(this.tableSection, this.tableList[i].section)
         this.onClickInInput(this.tableList[i].full_table);
         //break;
         //TO DO: Need to give each table a name
       }
     }
     
-    // if(this.selectedTableNames.length === 0) {
-    //   this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
-    // }
+    if(this.selectedTableNames.length === 0) {
+      this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+    }
     // this.
     // this.reportsOfLicenseFiltered.forEach((element: any) => {
     //   if()
@@ -219,54 +182,153 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['tab'] = 'WaterUseTable';
       } else {
         allresults[i]['tab'] = 'Summary';
+        allresults[i]['section'] = 'Conservation of Water/Water Quality/Conjunctive Use';
+        allresults[i]['columns'] = '2';
       }
 
 
       //HARDCODED SECTION STARTS
+      if(this.profileId != 9 && this.profileId != 10 && this.profileId != 11) {
+        let disLabel = allresults[i]['display_label'];
+        if(disLabel === 'Primary Owner' || disLabel === 'MAX Direct Diversion Rate' || disLabel === 'Max Collection to  Storage' || disLabel === 'Max Collection to Storage' || disLabel === 'Water Right Face Value') {
+          allresults[i]['columns'] = '1';
+        }
+        if(disLabel === 'Source Of Water' || disLabel === 'POD Id' || disLabel === 'County') {
+          allresults[i]['columns'] = '3';
+        }
 
-      // //this.licenseReportsJson['doc_type'] === '' && 
-      // if((allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature')) {
-      //   allresults[i]['section'] = 'P2';
-      // }
+        //this.licenseReportsJson['doc_type'] === '' && 
+        if((allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature')) {
+          allresults[i]['section'] = 'P2';
+        }
 
-      // // if(allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'License Id'
-      // // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'Primary Owner') {
-      // //   allresults[i]['section'] = 'Summary';
-      // // }
+        if((allresults[i]['display_label'].includes('The project has been abandoned'))) {
+          allresults[i]['section'] = 'License Summary';
+        }
 
-      // // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms' || allresults[i]['display_label'] === 'Request Revocation'
-      // // || allresults[i]['display_label'] === 'Remarks') {
-      // //   allresults[i]['section'] = 'Compliance';
-      // // }
+        if((disLabel.includes('I have currently reviewed my water right license') || disLabel.includes('I am complying with all terms') || disLabel.includes('I am complying with all terms') || disLabel.includes('I have changed the intake'))) {
+          allresults[i]['section'] = 'Compliance';
+          allresults[i]['columns'] = '1';
+        }
 
-      // if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
-      // || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
-      //   allresults[i]['section'] = 'Applicant Details';
-      // }
 
-      // if(allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'POD Id' || allresults[i]['display_label'] === 'Storage Season'
-      // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'Use Net Acreage' || allresults[i]['display_label'] === 'Purpose Of Water Used'
-      // || allresults[i]['display_label'] === 'Diversion Season' || allresults[i]['display_label'] === 'Request Revocation' || allresults[i]['display_label'] === 'Max Collection to  Storage' || allresults[i]['display_label'] === 'Water Right Face Value') {
-      //   allresults[i]['section'] = 'License Summary';
-      //   //allresults[i]['tab'] = 'Claim Credit For Groundwater';
-      // }
+        // if((disLabel.includes('Face Value Unit'))) {
+        //   allresults[i]['tab'] = 'Face Value'
+        //   allresults[i]['section'] = 'Main Section';
+        //   allresults[i]['columns'] = '1';
+        // }
 
-      // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
-      // || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks') {
-      //   allresults[i]['section'] = 'Compliance';
-      // }
+        // if((disLabel.includes('Face Value Unit'))) {
+        //   allresults[i]['tab'] = 'Face Value'
+        //   allresults[i]['section'] = 'Main Section';
+        //   allresults[i]['columns'] = '1';
+        // }
+        if((disLabel.includes('Check if amounts are same'))) {
+          allresults[i]['tab'] = 'Amount of Water Beneficially Used'
+          allresults[i]['section'] = 'Main Section';
+          allresults[i]['columns'] = '1';
+        }
+        if((disLabel.includes('did you use reclaimed water'))) {
+          allresults[i]['tab'] = 'Claim Credit For Groundwater'
+          allresults[i]['section'] = 'Claim Credit For Groundwater';
+          allresults[i]['columns'] = '1';
+        }
+        if((disLabel.includes('were you using groundwater in lieu'))) {
+          allresults[i]['tab'] = 'Claim Credit For Groundwater'
+          allresults[i]['section'] = 'Claim Credit For Groundwater';
+          allresults[i]['columns'] = '1';
+        }
+        if((disLabel.includes('were you implementing any water conservation efforts') || disLabel.includes('Conservation Efforts'))) {
+          allresults[i]['tab'] = 'Claim Credit For Groundwater'
+          allresults[i]['section'] = 'Claim Credit For Groundwater';
+          allresults[i]['columns'] = '2';
+        }
 
-      // if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
-      //   allresults[i]['section'] = 'P2';
-      // }
 
-      // if(allresults[i]['display_label'] === 'Reclaimed Water') {
-      //   allresults[i]['section'] = 'P2';
-      // }
+        if(disLabel.includes('Password')) {
+          allresults[i]['section'] = 'Applicant Details';
+        }
 
-      // if(allresults[i]['display_label'] === 'Conjuctive Use') {
-      //   allresults[i]['section'] = 'P2';
-      // }
+        if(disLabel.includes('full licensed amount of water')) {
+          allresults[i]['tab'] = 'Face Value';
+          allresults[i]['section'] = 'Main Section';
+        }
+
+        if(disLabel.includes('I request revocation of the license')) {
+          allresults[i]['section'] = 'Compliance';
+        }
+
+        // if(allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'License Id'
+        // || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'Primary Owner') {
+        //   allresults[i]['section'] = 'Summary';
+        // }
+
+        // if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms' || allresults[i]['display_label'] === 'Request Revocation'
+        // || allresults[i]['display_label'] === 'Remarks') {
+        //   allresults[i]['section'] = 'Compliance';
+        // }
+
+      
+
+        if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
+        || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
+          allresults[i]['section'] = 'Applicant Details';
+        }
+
+        if(allresults[i]['display_label'] === 'County' || allresults[i]['display_label'] === 'POD Id' || allresults[i]['display_label'] === 'Storage Season'
+        || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'Use Net Acreage' || allresults[i]['display_label'] === 'Purpose Of Water Used'
+        || allresults[i]['display_label'] === 'Diversion Season' || allresults[i]['display_label'] === 'Request Revocation' || allresults[i]['display_label'] === 'Max Collection to  Storage' || allresults[i]['display_label'] === 'Max Collection to Storage' || allresults[i]['display_label'] === 'Water Right Face Value') {
+          allresults[i]['section'] = 'License Summary';
+          //allresults[i]['tab'] = 'Claim Credit For Groundwater';
+        }
+
+        if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
+        || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks' || allresults[i]['display_label'].includes('reviewed my license') || allresults[i]['display_label'].includes('complying with the conditions of my license')) {
+          allresults[i]['section'] = 'Compliance';
+        }
+        
+
+        // if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
+        //   allresults[i]['section'] = 'P2';
+        // }
+
+        // if(allresults[i]['display_label'] === 'Reclaimed Water') {
+        //   allresults[i]['section'] = 'P2';
+        // }
+
+        // if(allresults[i]['display_label'] === 'Conjuctive Use') {
+        //   allresults[i]['section'] = 'P2';
+        // }
+
+        if(allresults[i]['display_label'] === 'Face Value Unit') {
+          allresults[i]['section'] = 'P2';
+        }
+  
+      }
+
+      if(this.profileId === 10) {
+        let disLabel = allresults[i]['display_label'];
+        if((disLabel.includes('Application Number') || disLabel.includes('Permit ID') || disLabel.includes('License Id'))) {
+          // //allresults[i]['tab'] = 'Face Value'
+          // allresults[i]['section'] = 'Main Section';
+          allresults[i]['columns'] = '3';
+        }
+
+        if((disLabel.includes('Primary Owner') || (disLabel.includes('Date Of Inspection')) || (disLabel.includes('tributary to')) || (disLabel.includes('Purpose Of Water Used')) || (disLabel.includes('Point Of Diversion')) || (disLabel.includes('Place Of Use')))) {
+          // //allresults[i]['tab'] = 'Face Value'
+          // allresults[i]['section'] = 'Main Section';
+          allresults[i]['columns'] = '1';
+        }
+      }
+      
+
+
+
+
+      
+
+      
+      
 
       //HARDCODED SECTION ENDS
 
@@ -276,7 +338,7 @@ export class MapsFieldsComponent implements OnInit {
 
     this.allFieldsFromProfileDetails = [...allresults];
     console.log(allresults);
-    this.sectionList = ["Applicant Details", "License Summary", "Compliance"];
+    this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
   }
 
   populateReportsOfLicenseFields() {
@@ -288,6 +350,7 @@ export class MapsFieldsComponent implements OnInit {
     this.tabsList = [];
     this.tableList = [];
     let table1: any;
+    let docWidth, docHeight;
     for(let i = 0; i < valueKeys.length; i++) {
       if(values[valueKeys[i]]['KV']) {
         for(let j = 0; j < values[valueKeys[i]]['KV'].length; j++) {
@@ -300,6 +363,8 @@ export class MapsFieldsComponent implements OnInit {
                 break;
               }
             }
+            docWidth = tempV['doc_width'];
+            docHeight = tempV['doc_height'];
             //values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
             values[valueKeys[i]]['KV'][j]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
             retArray.push(values[valueKeys[i]]['KV'][j]);
@@ -318,10 +383,14 @@ export class MapsFieldsComponent implements OnInit {
                   if(value === 'SELECTED') {
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = key.toLowerCase() === 'no' ? false : true;
                     let tempV = values[valueKeys[i]]['SE'][j][seObjKeys[0]]
+                    docWidth = tempV['doc_width'];
+                    docHeight = tempV['doc_height'];
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
                   } else {
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value'] = key.toLowerCase() === 'no' ? true : false; 
                     let tempV = values[valueKeys[i]]['SE'][j][seObjKeys[0]]
+                    docWidth = tempV['doc_width'];
+                    docHeight = tempV['doc_height'];
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
                   }
                   values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page'] = i + 1;
@@ -343,10 +412,25 @@ export class MapsFieldsComponent implements OnInit {
             let allTableEntries = values[valueKeys[i]]['TE'][j][Object.keys(values[valueKeys[i]]['TE'][j])[0]];
             let headers = [];
             values[valueKeys[i]]['TE'][j]['display_label'] = allTableEntries['display_label'];
+            console.log(allTableEntries)
+            values[valueKeys[i]]['TE'][j]['bbox'] = this.calculateBoundingBoxes(allTableEntries['xmin'], allTableEntries['ymin'], allTableEntries['xmax'], allTableEntries['ymax'], docWidth, docHeight);
+            console.log(values[valueKeys[i]]['TE'][j]['bbox'])
             if(allTableEntries && allTableEntries['1']) {
               console.log(allTableEntries, values[valueKeys[i]]['TE'][j])
               let [headings, ...rows] = allTableEntries['1'];
               console.log(headings, rows);
+
+
+              //HARDCODED SECTION STARTS
+              if(this.profileId == 5) {
+            
+                if(values[valueKeys[i]]['TE'][j]['display_label'] === 'Storage Projects') {
+                  if((rows[rows.length - 1].filter(r => r === '')).length === rows[rows.length - 1].length) {
+                    rows.splice(rows.length - 1, 1);
+                  }
+                }
+              }
+              //HARDCODED SECTION ENDS
 
 
 
@@ -439,6 +523,18 @@ export class MapsFieldsComponent implements OnInit {
 
 
 
+
+
+
+              //HardCoded Section Starts
+              if(this.profileId == 7) {
+                rows.unshift(['', ''])
+              }
+              //HARDCODED Section Ends
+
+
+
+
               
 
               //Addition FOR Profile 3
@@ -465,36 +561,16 @@ export class MapsFieldsComponent implements OnInit {
               
 
               console.log(rows);
-          //NOW DONE BELOW
-              // let tempFormGroup: any = {};
-              // for(let i = 1; i < rows.length; i++) {
-              //   for(let j = 1; j < rows[i].length; j++) {
-              //     tempFormGroup[rows[i].length * i + j] = new FormControl(rows[i][j]);
-              //   }
-              // }
-
-              // let key = values[valueKeys[i]]['TE'][j]['display_label'];
-              
-              
-              // let temFbGroup = {};
-              // temFbGroup[key] = new FormGroup(tempFormGroup)
-              // if(this.reportsForm === undefined) {
-              //   this.reportsForm = this.fb.group(temFbGroup)
-              // } else {
-              //   this.reportsForm.addControl(key, this.fb.group(tempFormGroup))
-              // }
-              // console.log(tempFormGroup);
-
-
               //HARDCODED SECTION STARTS //this.licenseReportsJson['doc_type'] === '' && 
               let name = values[valueKeys[i]]['TE'][j]['display_label'];
 
               if(name === 'Claim Credit For Groundwater' || name === 'Claim Credit For Substitution' || name === 'Conservation Amount') {
-                values[valueKeys[i]]['TE'][j]['section'] = 'Claim Credit For Groundwater';
-                //values[valueKeys[i]]['TE'][j]['tab'] = 'Claim Credit For Groundwater';
-              } else {
                 values[valueKeys[i]]['TE'][j]['section'] = name;
-                //values[valueKeys[i]]['TE'][j]['tab'] = name;
+                values[valueKeys[i]]['TE'][j]['section_list'] = ['Claim Credit For Groundwater', 'Claim Credit For Substitution', 'Conservation Amount']
+                values[valueKeys[i]]['TE'][j]['tab'] = 'Claim Credit For Groundwater';
+              } else {
+                values[valueKeys[i]]['TE'][j]['section'] = 'Main Section';
+                values[valueKeys[i]]['TE'][j]['tab'] = name;
               }
 
               //HARDCODED SECTION ENDS
@@ -504,7 +580,9 @@ export class MapsFieldsComponent implements OnInit {
                 "table": rows,
                 "page": i + 1,
                 "section": values[valueKeys[i]]['TE'][j]['section'],
-                //"tab": values[valueKeys[i]]['TE'][j]['tab']
+                "tab": values[valueKeys[i]]['TE'][j]['tab'],
+                "bbox": values[valueKeys[i]]['TE'][j]['bbox'],
+                "sectionList": values[valueKeys[i]]['TE'][j]['section_list']
               })
               // this.tableList.push({
               //   "name": values[valueKeys[i]]['TE'][j]['display_label'],
@@ -542,7 +620,8 @@ export class MapsFieldsComponent implements OnInit {
           temp['display_value'] = retArray[i]['table'];
           temp['page'] = retArray[i]['page'];
           temp['section'] = retArray[i]['section'];
-          //temp['tab'] = retArray[i]['tab'];
+          temp['sectionList'] = retArray[i]['sectionList'];
+          temp['tab'] = retArray[i]['tab'];
 
           let tempFormGroup: any = {};
           for (let a = 1; a < retArray[i]['table'].length; a++) {
@@ -561,24 +640,20 @@ export class MapsFieldsComponent implements OnInit {
           }
 
         
-          // temp['bbox'] = {
-          //   "width": temp['value']['width'] / 100,
-          //   "height": temp['value']['height'] / 100,
-          //   "left": temp['value']['x'] / temp['value']['width'],
-          //   "top": temp['value']['y'] / temp['value']['height'],
-          // }
+          temp['bbox'] = retArray[i]['bbox']
 
-          temp['bbox'] = {
-            "width": temp['value']['width'],
-            "height": temp['value']['height'],
-            "left": temp['value']['x'],
-            "top": temp['value']['y'],
-          }
+          // temp['bbox'] = {
+          //   "width": temp['value']['width'],
+          //   "height": temp['value']['height'],
+          //   "left": temp['value']['x'],
+          //   "top": temp['value']['y'],
+          // }
           this.tableList.push({
             "name": retArray[i]['display_label'],
             "table": retArray[i]['table'],
             "section": retArray[i]['section'],
-            //"tab": retArray[i]['tab'],
+            "sectionList": retArray[i]['sectionList'],
+            "tab": retArray[i]['tab'],
             "full_table": temp,
           });
         }
@@ -593,8 +668,8 @@ export class MapsFieldsComponent implements OnInit {
       delete newTable.newMap;
       newTable['name'] = 'LicenseToSummaryTable';
       newTable['table'] = newTable.rows;
-      newTable['section'] = 'Summary';
-      //newTable['tab'] = 'Summary';
+      newTable['section'] = 'License Summary';
+      newTable['tab'] = 'Summary';
       newTable['full_table'] = newTable;
   
       let newTempFormGroup = {};
@@ -620,10 +695,10 @@ export class MapsFieldsComponent implements OnInit {
     
 
     this.tableList.forEach(element => {
-      if(!this.tabsList.includes(element.section))
-        this.tabsList.push(element.section);
-      // if(!this.tabsList.includes(element.tab))
-      //   this.tabsList.push(element.tab);
+      // if(!this.tabsList.includes(element.section))
+      //   this.tabsList.push(element.section);
+      if(!this.tabsList.includes(element.tab))
+        this.tabsList.push(element.tab);
     });
     
 
@@ -679,11 +754,11 @@ export class MapsFieldsComponent implements OnInit {
   changesToLicenseSummary(m) {
     let newHeadings;
     let namesToCompareAgainst = [];
-    if(this.profileId === 0 || this.profileId === 1) {
+    if(this.profileId === 0 || this.profileId === 1 || this.profileId === 2) {
       newHeadings = ['Licensed Uses of Water', 'Acres', 'Direct Diversion Season', 'Collection To Storage Season']
       namesToCompareAgainst = ['Use Net Acreage', 'Diversion Season', 'Storage Season']
     }
-    if(this.profileId === 2 || this.profileId === 3 || this.profileId === 4) {
+    if(this.profileId === 3 || this.profileId === 4) {
       newHeadings = ['Licensed Uses of Water', 'Acres', 'Diversion/Storage Season']
       namesToCompareAgainst = ['Use Net Acreage', 'Diversion/Storage Season',]
     }
