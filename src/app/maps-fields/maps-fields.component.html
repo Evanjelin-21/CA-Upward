@@ -9,7 +9,7 @@
             <div *ngIf="shouldDisplayForm && shouldAddSections">
                 <form [formGroup]="reportsForm" class="row mt-4">
                     <div *ngFor="let section of sectionList;">
-                        <div *ngIf="elementsList.children.length > 0" class="row fluid" style="text-align: center;">
+                        <div *ngIf="documentType==='Report Of Licensee' && elementsList.children.length > 0 && shouldDisplaySectionName" class="row fluid" style="text-align: center;">
                             <h4>{{section}}</h4>
                         </div>
                         <div #elementsList class="row fluid">
@@ -50,16 +50,17 @@
                                             [formControlName]="field['id']" style="width: 20px; margin-top: 0; height: 20px;" type="checkbox"
                                             [value]="field['display_value']">
                                     </div>
+                                    
                                 </div>
                             </div>                            
                         </div>
-                        <ng-container *ngIf="tableSection === section">
+                        <!-- <ng-container *ngIf="tableSection === section"> -->
 
                             <div class="card col-xl-12" *ngIf="selectedTableNames.length != 0"> <!--m-2-->
-                                <div *ngFor="let table of fullTableArray; let index = index" class="border border-dark mt-2 mb-2">
+                                <div (click)="onClickInInput(table)" *ngFor="let table of fullTableArray | filterPipe:section; let index = index" class="border border-dark mt-2 mb-2">
                                     
                                     
-                                    <div *ngFor="let row of table; let i = index" [formGroupName]="selectedTableNames[index]" [style]="i === 0 ? 'background-color: #104f7d; color: white;
+                                    <div *ngFor="let row of table['display_value']; let i = index" [formGroupName]="selectedTableNames[index]" [style]="i === 0 ? 'background-color: #104f7d; color: white;
                                     margin: 0;
                                     text-align: center;':''" class="card-body row p-1 m-0 ">
                                         
@@ -89,7 +90,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </ng-container>
+                        <!-- </ng-container> -->
 
                         <hr *ngIf="elementsList.children.length > 0"/>
                     </div>

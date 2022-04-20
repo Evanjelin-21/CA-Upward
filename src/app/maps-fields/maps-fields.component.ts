@@ -4,6 +4,7 @@ import { DocumentService } from '../_services/document.service';
 import { CookieService } from 'ngx-cookie-service';
 import { loginService } from '../_services/login.service';
 import { ActivatedRoute } from '@angular/router';
+import * as cloneDeep from 'lodash/cloneDeep';
 declare var drawHighlightsUsingBboxes: any;
 declare var clearAllHighlights: any;
 class field {
@@ -27,7 +28,7 @@ class field {
 export class MapsFieldsComponent implements OnInit {
   profileDetails: any = null;
   allFieldsFromProfileDetails: any = [];
-  licenseReportsJson: any = [];
+  licenseReportsJson: any = {};
   reportsOfLicenseFields: any [];
   reportsForm: FormGroup;
   reportsOfLicenseFiltered: any = [];
@@ -42,6 +43,10 @@ export class MapsFieldsComponent implements OnInit {
   profileId = null;
   tableSection = null;
   shouldAddSections = true;
+  staticLicenseReportsJson = {};
+  staticProfileDetailsJson = [];
+  keyForTableFormName = null;
+  shouldDisplaySectionName = true;
   @Output() documentTypeEvent = new EventEmitter<string>();
 
   @Input() selectedDoc = 'Maps';
@@ -60,7 +65,9 @@ export class MapsFieldsComponent implements OnInit {
 
     if(this.selectedDoc === 'LicenseReports') {
       this.licenseReportsJson = (await this.docService.getExtractedJson(this.vaultDocId).toPromise())['metadata']['properties']['Extracted Json'];
+      this.staticLicenseReportsJson = cloneDeep(this.licenseReportsJson);
       this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
+      this.staticProfileDetailsJson = cloneDeep(this.profileDetails);
       //this.profileDetails = this.docService.getProfileDetails2();
       console.log(this.profileDetails, this.licenseReportsJson);
       this.documentType = this.licenseReportsJson['docType'];
@@ -88,7 +95,7 @@ export class MapsFieldsComponent implements OnInit {
   }
 
   tabChanged(e: any) {
-  
+    this.shouldDisplaySectionName = true;
     this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['tab'] === e.tab.textLabel)
     this.selectedTableNames = [];
     this.fullTableArray = [];
@@ -98,12 +105,20 @@ export class MapsFieldsComponent implements OnInit {
         this.selectedTableNames.push(this.tableList[i].name);
         console.log(this.selectedTableNames);
         this.tableSection = this.tableList[i].section;
-        this.fullTableArray.push([...this.tableList[i].table]);
+        this.fullTableArray.push(this.tableList[i].full_table);
         console.log(this.fullTableArray);
         if(this.tableList[i].tab != 'Summary') {
           this.sectionList = this.tableList[i].sectionList ? this.tableList[i].sectionList : ['Main Section'];
+          if(this.sectionList.length === 1 && this.sectionList[0] === 'Main Section') {
+            this.shouldDisplaySectionName = false;
+          }
         } else {
-          this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+          if(this.profileId === 8) {
+            this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+          } else {
+            this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+          }
+          
         }
         console.log(this.tableSection, this.tableList[i].section)
         this.onClickInInput(this.tableList[i].full_table);
@@ -113,7 +128,12 @@ export class MapsFieldsComponent implements OnInit {
     }
     
     if(this.selectedTableNames.length === 0) {
-      this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+      if(this.profileId === 8) {
+        this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+      } else {
+        this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+      }
+      //this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
     }
     // this.
     // this.reportsOfLicenseFiltered.forEach((element: any) => {
@@ -158,6 +178,55 @@ export class MapsFieldsComponent implements OnInit {
     }
   }
 
+  completeForm() {
+
+    let allresults: any = [];
+    for(let i = 0; i < this.staticProfileDetailsJson.length; i++) {
+      allresults = allresults.concat(this.staticProfileDetailsJson[i]['annotations'][0]['result'])
+    }
+
+    for(let i = 0; i < allresults.length; i++) {
+      allresults[i]['display_label'] = allresults[i]['meta']['text'][0].split('|')[2].trim();
+    }
+
+    //Get and Store All values from documentTypeForm
+    let keys = Object.keys(this.reportsForm.value[this.documentType])
+    console.log(keys)
+    for(let i = 0; i < allresults.length; i++) {
+      for(let j = 0; j < keys.length; j++) {
+        if(allresults[i]['id'] === keys[j]) {
+          console.log('aaa')
+          allresults[i]['display_value'] = this.reportsForm.value[this.documentType][keys[j]];
+          break;
+        }
+      }
+    }
+
+    keys = Object.keys(this.reportsForm.value)
+    for(let i = 0; i < keys.length; i++) {
+      if(keys != this.documentType) {
+        for(let j = 0; j < allresults.length; j++) {
+          if(allresults[j]['display_label'] === keys[i]) {
+            console.log('bbb')
+            allresults[j]['display_value'] = this.reportsForm.value[keys[i]];
+            break;
+          }
+        }
+      }
+    }
+
+    // for(let j = 0; j < allresults.length; j++) {
+    //   if(allresults[j]['display_label'] === 'LicenseToSummaryTable') {
+    //     console.log('ccc')
+    //     allresults[j]['display_value'] = this.reportsForm.value['LicenseToSummaryTable'];
+    //     break;
+    //   }
+    // }
+
+
+    console.log(this.reportsForm, this.staticLicenseReportsJson, this.staticProfileDetailsJson, allresults);
+  }
+
   populateReportsOfLicenseFieldsUsingProfileDetails() {
     let allresults: any = [];
     console.log(this.profileDetails, this.profileDetails.length);
@@ -182,7 +251,19 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['tab'] = 'WaterUseTable';
       } else {
         allresults[i]['tab'] = 'Summary';
-        allresults[i]['section'] = 'Conservation of Water/Water Quality/Conjunctive Use';
+        if(this.profileId === 8) {
+          if(allresults[i]['display_label'].includes('1963')) {
+            allresults[i]['section'] = '1963';
+          }
+          if(allresults[i]['display_label'].includes('1964')) {
+            allresults[i]['section'] = '1964';
+          }
+          if(allresults[i]['display_label'].includes('1965')) {
+            allresults[i]['section'] = '1965';
+          }
+        } else {
+          allresults[i]['section'] = 'Conservation of Water/Water Quality/Conjunctive Use';
+        }
         allresults[i]['columns'] = '2';
       }
 
@@ -230,7 +311,7 @@ export class MapsFieldsComponent implements OnInit {
         }
         if((disLabel.includes('did you use reclaimed water'))) {
           allresults[i]['tab'] = 'Claim Credit For Groundwater'
-          allresults[i]['section'] = 'Claim Credit For Groundwater';
+          allresults[i]['section'] = 'Claim Credit For Substitution';
           allresults[i]['columns'] = '1';
         }
         if((disLabel.includes('were you using groundwater in lieu'))) {
@@ -240,7 +321,7 @@ export class MapsFieldsComponent implements OnInit {
         }
         if((disLabel.includes('were you implementing any water conservation efforts') || disLabel.includes('Conservation Efforts'))) {
           allresults[i]['tab'] = 'Claim Credit For Groundwater'
-          allresults[i]['section'] = 'Claim Credit For Groundwater';
+          allresults[i]['section'] = 'Conservation Amount';
           allresults[i]['columns'] = '2';
         }
 
@@ -285,6 +366,12 @@ export class MapsFieldsComponent implements OnInit {
         if(allresults[i]['display_label'] === 'Reviewed Water Right License' || allresults[i]['display_label'] === 'Complying With Terms'
         || allresults[i]['display_label'] === 'Intake Location Change' || allresults[i]['display_label'] === 'Remarks' || allresults[i]['display_label'].includes('reviewed my license') || allresults[i]['display_label'].includes('complying with the conditions of my license')) {
           allresults[i]['section'] = 'Compliance';
+        }
+
+        if(this.profileId === 8) {
+          if(allresults[i]['display_label'] === 'Remarks' || allresults[i]['display_label'] === 'Source Of Water') {
+            allresults[i]['columns'] = '1';
+          }
         }
         
 
@@ -338,7 +425,12 @@ export class MapsFieldsComponent implements OnInit {
 
     this.allFieldsFromProfileDetails = [...allresults];
     console.log(allresults);
-    this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+    if(this.profileId === 8) {
+      this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+    } else {
+      this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
+    }
+    //this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
   }
 
   populateReportsOfLicenseFields() {
@@ -557,7 +649,6 @@ export class MapsFieldsComponent implements OnInit {
 
 
 
-
               
 
               console.log(rows);
@@ -566,7 +657,7 @@ export class MapsFieldsComponent implements OnInit {
 
               if(name === 'Claim Credit For Groundwater' || name === 'Claim Credit For Substitution' || name === 'Conservation Amount') {
                 values[valueKeys[i]]['TE'][j]['section'] = name;
-                values[valueKeys[i]]['TE'][j]['section_list'] = ['Claim Credit For Groundwater', 'Claim Credit For Substitution', 'Conservation Amount']
+                values[valueKeys[i]]['TE'][j]['section_list'] = ['Conservation Amount', 'Claim Credit For Substitution', 'Claim Credit For Groundwater']
                 values[valueKeys[i]]['TE'][j]['tab'] = 'Claim Credit For Groundwater';
               } else {
                 values[valueKeys[i]]['TE'][j]['section'] = 'Main Section';
@@ -662,14 +753,16 @@ export class MapsFieldsComponent implements OnInit {
     }
 
     //HARD CODED SECTION BEGINS - Creates a table from LicenseOfSummary
-    if(this.documentType.includes('Report Of Licensee')) {
+    if(this.documentType.includes('Report Of Licensee') && this.profileId != 8) {
       let newTable = this.changesToLicenseSummary(m);
       m = new Map(newTable['newMap']);
       delete newTable.newMap;
       newTable['name'] = 'LicenseToSummaryTable';
       newTable['table'] = newTable.rows;
       newTable['section'] = 'License Summary';
+      newTable['sectionList'] = ['License Summary']
       newTable['tab'] = 'Summary';
+      newTable['display_value'] = newTable.rows
       newTable['full_table'] = newTable;
   
       let newTempFormGroup = {};
@@ -821,10 +914,6 @@ export class MapsFieldsComponent implements OnInit {
       "newMap": m
     }
     
-  }
-
-  completeForm() {
-    console.log(this.reportsForm);
   }
 
   transpose (matrix) {
