@@ -251,6 +251,7 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['tab'] = 'WaterUseTable';
       } else {
         allresults[i]['tab'] = 'Summary';
+        //HardCoded Section begins
         if(this.profileId === 8) {
           if(allresults[i]['display_label'].includes('1963')) {
             allresults[i]['section'] = '1963';
@@ -264,6 +265,7 @@ export class MapsFieldsComponent implements OnInit {
         } else {
           allresults[i]['section'] = 'Conservation of Water/Water Quality/Conjunctive Use';
         }
+        //HardCoded Section ends
         allresults[i]['columns'] = '2';
       }
 
@@ -292,6 +294,72 @@ export class MapsFieldsComponent implements OnInit {
           allresults[i]['columns'] = '1';
         }
 
+        
+
+        if(this.profileId === 1) {
+          if(disLabel.includes('Primary Contact')) {
+            allresults[i]['columns'] = '1';
+          }
+
+          
+            
+          if(disLabel.includes('MAX Direct Diversion Rate') || disLabel.includes('Max Collection to Storage')) {
+            allresults[i]['columns'] = '2';
+          }
+            
+        }
+
+        if(this.profileId === 2) {
+          if(disLabel.includes('Conservation Efforts') ){
+            console.log(allresults[i])
+          }
+          if(disLabel.includes('MAX Direct Diversion Rate') || disLabel.includes('Max Collection to  Storage') || 
+          disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
+            allresults[i]['columns'] = '2';
+          }
+        }
+
+        if(this.profileId === 3) {
+          if(disLabel.includes('Primary Contact')) {
+            allresults[i]['columns'] = '1';
+          }
+          if(disLabel.includes('Conservation Efforts') ){
+            console.log(allresults[i])
+          }
+          if(disLabel.includes('Max Collection to  Storage') || 
+          disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
+            allresults[i]['columns'] = '2';
+          }
+        }
+
+        if(this.profileId === 4) {
+          if(disLabel.includes('Primary Contact')) {
+            allresults[i]['columns'] = '1';
+          }
+          if(disLabel.includes('Conservation Efforts') ){
+            console.log(allresults[i])
+          }
+          if(disLabel.includes('Max Collection to  Storage') || 
+          disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
+            allresults[i]['columns'] = '2';
+          }
+        }
+
+        if(this.profileId === 5) {
+          // if(disLabel.includes('Primary Contact')) {
+          //   allresults[i]['columns'] = '1';
+          // }
+          // if(disLabel.includes('Conservation Efforts') ){
+          //   console.log(allresults[i])
+          // }
+          //if(disLabel.includes('Max Collection to  Storage') || 
+          if(disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
+            allresults[i]['columns'] = '2';
+          }
+        }
+
+     
+
 
         // if((disLabel.includes('Face Value Unit'))) {
         //   allresults[i]['tab'] = 'Face Value'
@@ -304,27 +372,32 @@ export class MapsFieldsComponent implements OnInit {
         //   allresults[i]['section'] = 'Main Section';
         //   allresults[i]['columns'] = '1';
         // }
+        if(this.profileId != 2 && this.profileId != 3 ) {
+          if((disLabel.includes('did you use reclaimed water'))) {
+            allresults[i]['tab'] = 'Claim Credit For Groundwater'
+            allresults[i]['section'] = 'Claim Credit For Substitution';
+            allresults[i]['columns'] = '1';
+          }
+          if((disLabel.includes('were you using groundwater in lieu'))) {
+            allresults[i]['tab'] = 'Claim Credit For Groundwater'
+            allresults[i]['section'] = 'Claim Credit For Groundwater';
+            allresults[i]['columns'] = '1';
+          }
+          if((disLabel.includes('were you implementing any water conservation efforts') || disLabel.includes('Conservation Efforts'))) {
+            allresults[i]['tab'] = 'Claim Credit For Groundwater'
+            allresults[i]['section'] = 'Conservation Amount';
+            allresults[i]['columns'] = '2';
+          }
+        }
         if((disLabel.includes('Check if amounts are same'))) {
           allresults[i]['tab'] = 'Amount of Water Beneficially Used'
           allresults[i]['section'] = 'Main Section';
           allresults[i]['columns'] = '1';
         }
-        if((disLabel.includes('did you use reclaimed water'))) {
-          allresults[i]['tab'] = 'Claim Credit For Groundwater'
-          allresults[i]['section'] = 'Claim Credit For Substitution';
+        
+        if(disLabel.includes('Conservation Efforts Used')) {
           allresults[i]['columns'] = '1';
         }
-        if((disLabel.includes('were you using groundwater in lieu'))) {
-          allresults[i]['tab'] = 'Claim Credit For Groundwater'
-          allresults[i]['section'] = 'Claim Credit For Groundwater';
-          allresults[i]['columns'] = '1';
-        }
-        if((disLabel.includes('were you implementing any water conservation efforts') || disLabel.includes('Conservation Efforts'))) {
-          allresults[i]['tab'] = 'Claim Credit For Groundwater'
-          allresults[i]['section'] = 'Conservation Amount';
-          allresults[i]['columns'] = '2';
-        }
-
 
         if(disLabel.includes('Password')) {
           allresults[i]['section'] = 'Applicant Details';
@@ -390,6 +463,23 @@ export class MapsFieldsComponent implements OnInit {
         if(allresults[i]['display_label'] === 'Face Value Unit') {
           allresults[i]['section'] = 'P2';
         }
+
+
+        if(this.profileId == 6 || this.profileId == 7) {
+          if(disLabel.includes('Primary Owner')) {
+            allresults[i]['columns'] = '2';
+          }
+
+          if(disLabel.includes('License Id')) {
+           
+            allresults[i]['section'] = 'License Summary';
+            allresults[i]['columns'] = '1';
+          }
+
+          if(disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
+            allresults[i]['columns'] = '1';
+          }
+        }
   
       }
 
@@ -408,7 +498,8 @@ export class MapsFieldsComponent implements OnInit {
         }
       }
       
-
+      
+      
 
 
 
@@ -662,6 +753,24 @@ export class MapsFieldsComponent implements OnInit {
               } else {
                 values[valueKeys[i]]['TE'][j]['section'] = 'Main Section';
                 values[valueKeys[i]]['TE'][j]['tab'] = name;
+              }
+
+              if(this.profileId == 6) {
+                //change the entire table
+                if(values[valueKeys[i]]['TE'][j]['display_label'].includes('Beneficial Uses Of Water')) {
+                  rows = [['USE (COMPLETE FOR ALL PROJECTS)', '1969', '1970', '1971'],
+                  ['7. Acreage irrigated', '', '', ''],
+                  ['Crops grown:', '', '', ''],
+                  ['8. Stockwatering - number of stock', '', '', ''],
+                  ['kind of stock', '', '', ''],
+                  ['9. Domestic - number of persons', '', '', ''],
+                  ['garden area, etc.', '', '', ''],
+                  ['10. Recreational - nature of use', '', '', ''],
+                  ['11. Industrial - nature of use', '', '', ''],
+                  ['12. Municipal - approximate population', '', '', ''],
+                  ['13. Power generation - K.W.', '', '', ''],
+                  ['14. Other.', '', '', '']]
+                }
               }
 
               //HARDCODED SECTION ENDS
