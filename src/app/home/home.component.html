@@ -1,5 +1,5 @@
 
-<div class="col-6" style="float: right;"> <!--card p-2 m-2 -->
+<div #firstDiv class="col-6" style="float: right;"> <!--card p-2 m-2 -->
     <div>
         <div class="card m-2">
             <!-- <form [formGroup]="mappingForm" class="card-body"> -->
@@ -28,7 +28,7 @@
     </div>
 </div>
 
-<div  class="col-6" style="float: left; height: 100%;">
+<div  class="col-6" style="float: left; height: 100%; min-height: 100%;" [style.height.px]="firstDiv.offsetHeight">
     <div id="ithParent" class="col-12 h-100 fluid">
         <!-- <div class="help-attr row"><a href="https://in-ith-web.s3.us-east-2.amazonaws.com/help-docoperations.html" target="_blank">Help</a></div> -->
         <!--Parent container to host the client-->

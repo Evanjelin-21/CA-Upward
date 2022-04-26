@@ -47,6 +47,7 @@ export class MapsFieldsComponent implements OnInit {
   staticProfileDetailsJson = [];
   keyForTableFormName = null;
   shouldDisplaySectionName = true;
+  separateTableValuesForLicenseSummary = [];
   @Output() documentTypeEvent = new EventEmitter<string>();
 
   @Input() selectedDoc = 'Maps';
@@ -114,7 +115,13 @@ export class MapsFieldsComponent implements OnInit {
           }
         } else {
           if(this.profileId === 8) {
-            this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+            this.sectionList = ["Applicant Details", "License Summary",  "1963", "1964", "1965", "Compliance"];
+          } else if(this.profileId === 10) {
+              this.sectionList = ["Applicant Details", "License Summary", "Diversion Point/Beneficial Use of Water"];
+          } else if(this.profileId === 11) {
+            this.sectionList = ["Applicant Details", "Compliance", "Water Usage", "Water Storage/Remarks"];
+          } else if(this.profileId === 9) {
+            this.sectionList = ["Applicant Details", "Source, Amount, Use, and Location of Diversion Works", "Description of Diversion Works", "Completion Schedule", "Description of Proposed Use", "General"];
           } else {
             this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
           }
@@ -129,7 +136,13 @@ export class MapsFieldsComponent implements OnInit {
     
     if(this.selectedTableNames.length === 0) {
       if(this.profileId === 8) {
-        this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+        this.sectionList = ["Applicant Details", "License Summary", "1963", "1964", "1965", "Compliance"];
+      } else if(this.profileId === 10) {
+        this.sectionList = ["Applicant Details", "License Summary", "Diversion Point/Beneficial Use of Water"];
+      } else if(this.profileId === 11) {
+        this.sectionList = ["Applicant Details", "Compliance", "Water Usage", "Water Storage/Remarks"];
+      } else if(this.profileId === 9) {
+        this.sectionList = ["Applicant Details", "Source, Amount, Use, and Location of Diversion Works", "Description of Diversion Works", "Completion Schedule", "Description of Proposed Use", "General"];
       } else {
         this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
       }
@@ -150,31 +163,17 @@ export class MapsFieldsComponent implements OnInit {
     }
   }
 
-  async ngOnChanges() {
-    
-    if(this.selectedDoc === 'LicenseReports') {
-     
-      //console.log(this.reportsOfLicenseFiltered, this.fullTableArray,  this.currentAmountsOfWaterDivertedTable);
-    } else if(this.selectedDoc === 'DiversionLicense') {
-      this.licenseReportsJson = await this.docService.getExtractedJson(this.vaultDocId).toPromise();
-      this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
-    
-      console.log(this.profileDetails, this.licenseReportsJson);
-      this.shouldDisplayForm = true;
-      this.populateReportsOfLicenseFieldsUsingProfileDetails();
-      this.fullTableArray = [];
-      this.currentAmountsOfWaterDivertedTable = [];
-      
-      let tempArray = [] as any;
-      this.populateReportsOfLicenseFields();
-
-      this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['table'] == '');
-      this.tabChanged({
-        "tab": {
-          "textLabel": this.tabsList[0]
-        }
-      })
-      //console.log(this.reportsOfLicenseFiltered, this.fullTableArray,  this.currentAmountsOfWaterDivertedTable);
+  onClickInInputFieldInTable(field, tablePage, docWidth, docHeight) {
+    console.log(docHeight, docWidth)
+    if(!field['page'] || !field['bbox']) {
+      field['page'] = tablePage;
+      field['bbox'] = this.calculateBoundingBoxes(field['xmin'], field['ymin'], field['xmax'], field['ymax'], docWidth, docHeight);
+    }
+    console.log(field)
+    if(field['page'] != null && field['bbox'] != null && field['page'] != undefined && field['bbox'] != undefined) {
+      new drawHighlightsUsingBboxes(field['page'], field['bbox'])
+    } else {
+      new clearAllHighlights()
     }
   }
 
@@ -182,7 +181,11 @@ export class MapsFieldsComponent implements OnInit {
 
     let allresults: any = [];
     for(let i = 0; i < this.staticProfileDetailsJson.length; i++) {
-      allresults = allresults.concat(this.staticProfileDetailsJson[i]['annotations'][0]['result'])
+      let tempResult = this.staticProfileDetailsJson[i]['annotations'][0]['result'].map(ele => {
+        ele['page'] = i + 1;
+        return ele;
+      })
+      allresults = allresults.concat(tempResult)
     }
 
     for(let i = 0; i < allresults.length; i++) {
@@ -196,7 +199,7 @@ export class MapsFieldsComponent implements OnInit {
       for(let j = 0; j < keys.length; j++) {
         if(allresults[i]['id'] === keys[j]) {
           console.log('aaa')
-          allresults[i]['display_value'] = this.reportsForm.value[this.documentType][keys[j]];
+          allresults[i]['final_display_value'] = this.reportsForm.value[this.documentType][keys[j]];
           break;
         }
       }
@@ -208,29 +211,146 @@ export class MapsFieldsComponent implements OnInit {
         for(let j = 0; j < allresults.length; j++) {
           if(allresults[j]['display_label'] === keys[i]) {
             console.log('bbb')
-            allresults[j]['display_value'] = this.reportsForm.value[keys[i]];
+            allresults[j]['final_display_value'] = this.reportsForm.value[keys[i]];
             break;
           }
         }
       }
     }
+    console.log(this.tableList);
 
-    // for(let j = 0; j < allresults.length; j++) {
-    //   if(allresults[j]['display_label'] === 'LicenseToSummaryTable') {
-    //     console.log('ccc')
-    //     allresults[j]['display_value'] = this.reportsForm.value['LicenseToSummaryTable'];
-    //     break;
+    let pageKeys = Object.keys(this.staticLicenseReportsJson['values'])
+    for(let i = 0;  i < pageKeys.length; i++) {
+      let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
+      console.log(tempAllResultsByPage);
+      let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
+      let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
+      let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
+
+      let keys = Object.keys(this.staticLicenseReportsJson['values'][pageKeys[i]]);
+      for(let j = 0; j < keys.length; j++) {
+        if(keys[j] === 'KV') {
+          for(let k = 0; k < tempAllResultsByPageKV.length; k++) {
+            this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele =>  {
+              if(ele['display_label'] === tempAllResultsByPageKV[k]['display_label']) {
+                ele['final_display_value'] = tempAllResultsByPageKV[k]['final_display_value'];
+              } else {
+                let val = '';
+                let shouldAdd = false;
+                for(let a = 0; a < this.separateTableValuesForLicenseSummary.length; a++) {
+                  let summaryEle = this.separateTableValuesForLicenseSummary[a];
+                  if(summaryEle['name'] === ele['display_label']) {
+                    shouldAdd = true;
+                    if(val != '') {
+                      if(summaryEle['display_value']) {
+                        val += ('|' + summaryEle['display_value'])
+                      } else {
+                        if(summaryEle['value']) {
+                          val += ('|' + summaryEle['value'])
+                        } else {
+                          val += ('|' + '')
+                        }
+                        
+                      }
+                      
+                    } else {
+                      if(summaryEle['display_value']) {
+                        val = summaryEle['display_value']
+                      } else {
+                        if(summaryEle['value']) {
+                          val = summaryEle['value']
+                        } else {
+                          val = ''
+                        }
+                        
+                      }
+                      
+                    }
+                  }
+                }
+                if(shouldAdd) {
+                  ele['tempVal'] = val;
+                }
+              }              
+            })
+          }
+        } else if(keys[j] === 'SE') {
+          //console.log(tempAllResultsByPageSE)
+          for(let k = 0; k < tempAllResultsByPageSE.length; k++) {
+            let SEKeys = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]]
+            this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
+              let eleKeys = Object.keys(ele)
+              if(ele[eleKeys[0]]['display_label'] === tempAllResultsByPageSE[k]['display_label']) {
+                ele[eleKeys[0]]['final_display_value'] = tempAllResultsByPageSE[k]['final_display_value'];
+              }
+            })
+          }
+        } else if(keys[j] === 'TE') {
+          let tempTable = null;
+          let tempTableFromForm = null;
+          for(let k = 0; k < this.tableList.length; k++) {
+            for(let l = 0; l < tempAllResultsByPageTE.length; l++) {
+              if(this.tableList[k]['name'] === tempAllResultsByPageTE[l]['display_label']) {
+                tempTable = cloneDeep(this.tableList[k]['full_table']);
+                tempTableFromForm = cloneDeep(tempAllResultsByPageTE[l]['final_display_value']);
+                
+
+                for (let m = 1; m < tempTable.display_value.length; m++) {
+                  for (let n = 1; n < tempTable.display_value[m].length; n++) {
+                    tempTable.display_value[m][n]['value'] = tempTableFromForm[tempTable.display_value[m].length * m + n]
+                  }
+                }
+                if(tempTable["transposed"]) {
+                  tempTable['display_value'] = cloneDeep((this.transpose(tempTable['display_value'])))
+                }
+                this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
+                let eleKeys = Object.keys(ele);
+                  if(ele[eleKeys[0]]['display_label'] === tempTable['display_label']) {
+                    ele[eleKeys[0]]['final_display_value'] = tempTable['display_value'];
+                  }
+                })
+                
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+    // let updateMetadataBody = {
+    //   docId: "",
+    //   category_id: 1,
+    //   properties: {
+    //     "Case ID": "",
+
     //   }
     // }
 
 
-    console.log(this.reportsForm, this.staticLicenseReportsJson, this.staticProfileDetailsJson, allresults);
+    console.log(this.staticLicenseReportsJson);
+  }
+
+
+  changeFn(e, tname) {
+    
+    this.separateTableValuesForLicenseSummary.map(ele => {
+      if(ele['place'] === e) {
+        ele['display_value'] = this.reportsForm.controls[tname]['value'][e];
+      }
+    });
+    console.log(this.separateTableValuesForLicenseSummary, e)
   }
 
   populateReportsOfLicenseFieldsUsingProfileDetails() {
     let allresults: any = [];
     console.log(this.profileDetails, this.profileDetails.length);
     for(let i = 0; i < this.profileDetails.length; i++) {
+      if(this.profileId === 9) {
+        this.profileDetails[i]['annotations'][0]['result'].forEach(element => {
+          element['tempTab'] = 'Page ' + (i + 1)
+        });
+      }
       allresults = allresults.concat(this.profileDetails[i]['annotations'][0]['result'])
     }
 
@@ -253,6 +373,9 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['tab'] = 'Summary';
         //HardCoded Section begins
         if(this.profileId === 8) {
+          if(allresults[i]['display_label'].includes('License Id')) {
+            allresults[i]['section'] = 'License Summary';
+          }
           if(allresults[i]['display_label'].includes('1963')) {
             allresults[i]['section'] = '1963';
           }
@@ -261,6 +384,22 @@ export class MapsFieldsComponent implements OnInit {
           }
           if(allresults[i]['display_label'].includes('1965')) {
             allresults[i]['section'] = '1965';
+          }
+        } else if(this.profileId === 7) {
+          if(allresults[i]['display_label'].includes('1966')) {
+            allresults[i]['tab'] = '1966: Face Value';
+            allresults[i]['section'] = 'Main Section'
+            //allresults[i]['section'] = '1966';
+          }
+          if(allresults[i]['display_label'].includes('1967')) {
+            allresults[i]['tab'] = '1967: Face Value';
+            allresults[i]['section'] = 'Main Section'
+            //allresults[i]['section'] = '1967';
+          }
+          if(allresults[i]['display_label'].includes('1968')) {
+            allresults[i]['tab'] = '1968: Face Value';
+            allresults[i]['section'] = 'Main Section'
+            //allresults[i]['section'] = '1968';
           }
         } else {
           allresults[i]['section'] = 'Conservation of Water/Water Quality/Conjunctive Use';
@@ -281,7 +420,7 @@ export class MapsFieldsComponent implements OnInit {
         }
 
         //this.licenseReportsJson['doc_type'] === '' && 
-        if((allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'] === 'Phone Number' || allresults[i]['display_label'] === 'Signature')) {
+        if((allresults[i]['display_label'] === 'Date' || allresults[i]['display_label'].includes('Phone Number')  || allresults[i]['display_label'] === ('Phone Number') || allresults[i]['display_label'] === 'Signature')) {
           allresults[i]['section'] = 'P2';
         }
 
@@ -294,6 +433,9 @@ export class MapsFieldsComponent implements OnInit {
           allresults[i]['columns'] = '1';
         }
 
+        if(disLabel.includes('Primary Contact')) {
+          allresults[i]['columns'] = '1';
+        }
         
 
         if(this.profileId === 1) {
@@ -310,8 +452,8 @@ export class MapsFieldsComponent implements OnInit {
         }
 
         if(this.profileId === 2) {
-          if(disLabel.includes('Conservation Efforts') ){
-            console.log(allresults[i])
+          if(disLabel.includes('Primary Contact') ){
+            allresults[i]['columns'] = '1';
           }
           if(disLabel.includes('MAX Direct Diversion Rate') || disLabel.includes('Max Collection to  Storage') || 
           disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
@@ -336,9 +478,7 @@ export class MapsFieldsComponent implements OnInit {
           if(disLabel.includes('Primary Contact')) {
             allresults[i]['columns'] = '1';
           }
-          if(disLabel.includes('Conservation Efforts') ){
-            console.log(allresults[i])
-          }
+         
           if(disLabel.includes('Max Collection to  Storage') || 
           disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
             allresults[i]['columns'] = '2';
@@ -358,6 +498,18 @@ export class MapsFieldsComponent implements OnInit {
           }
         }
 
+        if(this.profileId === 6) {
+          if(allresults[i]['display_label'] === 'Remarks' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'Primary Owner') {
+            allresults[i]['columns'] = '1';
+          }
+        }
+
+        if(this.profileId === 7) {
+          if(allresults[i]['display_label'] === 'Remarks') {
+            allresults[i]['columns'] = '1';
+          }
+        }
+
      
 
 
@@ -372,7 +524,7 @@ export class MapsFieldsComponent implements OnInit {
         //   allresults[i]['section'] = 'Main Section';
         //   allresults[i]['columns'] = '1';
         // }
-        if(this.profileId != 2 && this.profileId != 3 ) {
+        if(this.profileId != 2 && this.profileId != 3 && this.profileId != 4 && this.profileId != 5) {
           if((disLabel.includes('did you use reclaimed water'))) {
             allresults[i]['tab'] = 'Claim Credit For Groundwater'
             allresults[i]['section'] = 'Claim Credit For Substitution';
@@ -389,6 +541,8 @@ export class MapsFieldsComponent implements OnInit {
             allresults[i]['columns'] = '2';
           }
         }
+
+
         if((disLabel.includes('Check if amounts are same'))) {
           allresults[i]['tab'] = 'Amount of Water Beneficially Used'
           allresults[i]['section'] = 'Main Section';
@@ -421,11 +575,10 @@ export class MapsFieldsComponent implements OnInit {
         // || allresults[i]['display_label'] === 'Remarks') {
         //   allresults[i]['section'] = 'Compliance';
         // }
-
       
 
         if(allresults[i]['display_label'] === 'Primary Owner' || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
-        || allresults[i]['display_label'] === 'Primary Contact' || allresults[i]['display_label'] === 'Contact Phone No') {
+        || allresults[i]['display_label'] === 'Primary Contact') {
           allresults[i]['section'] = 'Applicant Details';
         }
 
@@ -445,7 +598,12 @@ export class MapsFieldsComponent implements OnInit {
           if(allresults[i]['display_label'] === 'Remarks' || allresults[i]['display_label'] === 'Source Of Water') {
             allresults[i]['columns'] = '1';
           }
+          if(allresults[i]['display_label'].includes('License Id')) {
+            allresults[i]['section'] = 'License Summary';
+          }
         }
+
+       
         
 
         // if(allresults[i]['display_label'] === 'Water Conservation Efforts' || allresults[i]['display_label'] === 'Conservation Efforts') {
@@ -461,14 +619,15 @@ export class MapsFieldsComponent implements OnInit {
         // }
 
         if(allresults[i]['display_label'] === 'Face Value Unit') {
+        
           allresults[i]['section'] = 'P2';
         }
 
 
         if(this.profileId == 6 || this.profileId == 7) {
-          if(disLabel.includes('Primary Owner')) {
-            allresults[i]['columns'] = '2';
-          }
+          // if(this.profileId == 7 && disLabel.includes('Primary Owner')) {
+          //   allresults[i]['columns'] = '2';
+          // }
 
           if(disLabel.includes('License Id')) {
            
@@ -491,33 +650,129 @@ export class MapsFieldsComponent implements OnInit {
           allresults[i]['columns'] = '3';
         }
 
-        if((disLabel.includes('Primary Owner') || (disLabel.includes('Date Of Inspection')) || (disLabel.includes('tributary to')) || (disLabel.includes('Purpose Of Water Used')) || (disLabel.includes('Point Of Diversion')) || (disLabel.includes('Place Of Use')))) {
+        if((disLabel.includes('Source Of Water') || disLabel.includes('Primary Owner') || (disLabel.includes('Date Of Inspection')) || (disLabel.includes('tributary to')) || (disLabel.includes('Purpose Of Water Used')) || (disLabel.includes('Point Of Diversion')) || (disLabel.includes('Place Of Use')))) {
           // //allresults[i]['tab'] = 'Face Value'
-          // allresults[i]['section'] = 'Main Section';
           allresults[i]['columns'] = '1';
         }
+
+        if(disLabel.includes('Primary Owner') || allresults[i]['display_label'] === 'Application Number' || allresults[i]['display_label'] === 'License Id'
+        || allresults[i]['display_label'] === 'Permit ID') {
+          allresults[i]['section'] = 'Applicant Details';
+        } else if(disLabel.includes('Date Of Inspection') || allresults[i]['display_label'] === 'Source Of Water' || allresults[i]['display_label'] === 'County'
+        || allresults[i]['display_label'] === 'Tributary to' || disLabel.includes('Purpose Of Water Used') || allresults[i]['display_label'] === 'MAX Direct Diversion Rate' || allresults[i]['display_label'] === 'MAX Direct Diversion Rate UNITS') {
+          allresults[i]['section'] = 'License Summary';
+        } else {
+          allresults[i]['section'] = 'Diversion Point/Beneficial Use of Water';
+        }
       }
-      
-      
-      
+
+      if(this.profileId === 11) {
+        let disLabel = allresults[i]['display_label'];
+        allresults[i]['columns'] = '2';
+
+        if((disLabel.includes('Permit ID')) || (disLabel.includes('Primary Owner')) || (disLabel.includes('Mailing Address')
+         || (disLabel.includes('Approximate Cost of Construction')) || (disLabel.includes('Construction Details'))
+         || (disLabel === 'Power') || (disLabel.includes('Pending construction Work')) 
+         || (disLabel.includes('Months Water Used')) || (disLabel.includes('Use Water In Different Season'))
+         || (disLabel.includes('Other Months Of use')) || (disLabel.includes('Water Used Under Permit'))
+         || (disLabel.includes('Year intended To fully use water')) || (disLabel.includes('Intake Location Change')) || (disLabel.includes('Emptied Reservoir')) 
+         || (disLabel.includes('Months Water Collected In reservoir')) || (disLabel.includes('Remarks')))) {
+          // //allresults[i]['tab'] = 'Face Value'
+          allresults[i]['columns'] = '1';
+        }
+
+        if((disLabel.includes('Irrigation')) || (disLabel.includes('Total Acres Irrigated')) || (disLabel.includes('Total # Crops'))) {
+          // //allresults[i]['tab'] = 'Face Value'
+          allresults[i]['columns'] = '3';
+        }
+
+        if(disLabel.includes('Source Of Water') || disLabel.includes('Application Number') || disLabel.includes('Permit ID')) {
+          allresults[i]['section'] = 'Applicant Details';
+        } else if((disLabel.includes('Use Of Water Commenced')) || (disLabel.includes('Amount of water Used')
+         || (disLabel.includes('Irrigation')) || (disLabel.includes('Total Acres Irrigated'))
+         || (disLabel.includes('Total # Crops')) || (disLabel.includes('Stock Watering')) || (disLabel.includes('Mining'))
+         || (disLabel.includes('Industrial')) || (disLabel.includes('Recreational'))
+         || (disLabel.includes('Domestic')) || (disLabel.includes('Total Persons'))
+         || (disLabel.includes('Power')) || (disLabel.includes('Municipal'))  || (disLabel.includes('Total Population'))
+         || (disLabel.includes('Months Water Used')) || (disLabel.includes('Use Water In Different Season'))  || (disLabel.includes('Other Months Of use'))
+         || (disLabel.includes('Water Used Under Permit')) || (disLabel.includes('Year intended To fully use water'))  || (disLabel.includes('Intake Location Change')))) {
+          // //allresults[i]['tab'] = 'Face Value'
+          allresults[i]['section'] = 'Water Usage';
+        } else if((disLabel.includes('Primary Owner')) || (disLabel.includes('Mailing Address')
+        || (disLabel.includes('Approximate Cost of Construction')) || (disLabel.includes('Construction Details'))
+        || (disLabel.includes('Pending construction Work')) || (disLabel.includes('Request Revocation')) || (disLabel.includes('Construction Commenced'))
+        || (disLabel.includes('Construction Completed')) || (disLabel.includes('Estimated date Of Completion')))) {
+         // //allresults[i]['tab'] = 'Face Value'
+         allresults[i]['section'] = 'Compliance';
+       } else {
+        allresults[i]['section'] = 'Water Storage/Remarks';
+       }
+      }
+
+      if(this.profileId === 9) {
+        let disLabel = allresults[i]['display_label'];
+        allresults[i]['columns'] = '2';
+
+        allresults[i]['columns'] = '2';
+
+        if((disLabel.includes('Application Number')) || (disLabel.includes('Point Of Diversion')) 
+        || (disLabel.includes('Purpose Of Water Used')) || (disLabel.includes('Amount Of Water')) 
+        || disLabel.includes('MAX Direct Diversion Rate') || (disLabel.includes('Primary Owner')) 
+        || (disLabel.includes('County')) || (disLabel.includes('Source Of Water'))
+        || (disLabel.includes('Diversion Type'))  || (disLabel.includes('Capacity Of Diversion Conduit'))
+        || (disLabel.includes('Place Of Use')) || (disLabel.includes('Domestic Use')) 
+        || (disLabel.includes('Irrigation Use')) || (disLabel.includes('Cost Of Diversion Conduit')) 
+        || (disLabel.includes('Diverting Damn Measurement')) || (disLabel.includes('Reservoir Name'))
+        || (disLabel.includes('Power Use')) || (disLabel.includes('Municipal Use')) || (disLabel.includes('Mining Use')) || (disLabel.includes('Industrial Use'))) {
+          allresults[i]['columns'] = '1';
+        }
+
+        if((disLabel.includes('Pipe line Diameter')) || (disLabel.includes('Pipe Line Length')) 
+        || (disLabel.includes('Pipe Line Grade')) || (disLabel.includes('Orchard Acres')) 
+        || (disLabel.includes('Pasture Acres')) || (disLabel.includes('General Crops Acres'))) {
+          allresults[i]['columns'] = '3';
+        }
 
 
-
-      
-
-      
-      
-
+        if((disLabel.includes('Application Number')) || (disLabel.includes('Primary Owner')) || (disLabel.includes('County'))) {
+          allresults[i]['section'] = 'Applicant Details';
+        } else if((disLabel.includes('Source Of Water')) || (disLabel.includes('Point Of Diversion')) 
+        || (disLabel.includes('Purpose Of Water Used')) || (disLabel.includes('Amount Of Water')) 
+        || disLabel.includes('Direct Diversion') || (disLabel.includes('Collected season')) 
+        || (disLabel.includes('Conduit Terminates')) || (disLabel.includes('MAX Collection to Storage UNITS'))) {
+          allresults[i]['section'] = 'Source, Amount, Use, and Location of Diversion Works';
+        } else if((disLabel.includes('Diversion Type'))  || (disLabel.includes('Diverting Damn Measurement')) || (disLabel.includes('Reservoir Name')) 
+        || (disLabel.includes('Stream Bed')) || (disLabel.includes('Storage dam dimension')) 
+        || disLabel.includes('Free') || (disLabel.includes('Pipe line Diameter')) || (disLabel.includes('Pipe Line Length')) 
+        || (disLabel.includes('Pipe Line Grade')) || (disLabel.includes('Capacity Of Diversion Conduit'))
+        || (disLabel.includes('Cost Of Diversion Conduit')) || (disLabel.includes('Intake to Outlet')) || (disLabel.includes('Pipe Line Kind'))) {
+          allresults[i]['section'] = 'Description of Diversion Works';
+        } else if((disLabel.includes('COnstruction work Begin  Date'))  || (disLabel.includes('Construction Completed')) 
+        || (disLabel.includes('Proposed Use Date'))) {
+          allresults[i]['section'] = 'Completion Schedule';
+        } else if((disLabel.includes('Maps filed'))  || (disLabel.includes('Section Number')) 
+        || (disLabel.includes('Township Direction')) || (disLabel.includes('Range Direction'))) {
+          allresults[i]['section'] = 'General';
+        } else {
+          allresults[i]['section'] = 'Description of Proposed Use';
+        }
+      }
       //HARDCODED SECTION ENDS
 
     }
 
     allresults = allresults.filter(e => e['section'] != 'P2');
-
+   
     this.allFieldsFromProfileDetails = [...allresults];
     console.log(allresults);
     if(this.profileId === 8) {
-      this.sectionList = ["Applicant Details", "License Summary", "Compliance", "1963", "1964", "1965"];
+      this.sectionList = ["Applicant Details", "License Summary", "1963", "1964", "1965", "Compliance"];
+    } else if(this.profileId === 10) {
+      this.sectionList = ["Applicant Details", "License Summary", "Diversion Point/Beneficial Use of Water"];
+    } else if(this.profileId === 11) {
+      this.sectionList = ["Applicant Details", "Compliance", "Water Usage", "Water Storage/Remarks"];
+    } else if(this.profileId === 9) {
+      this.sectionList = ["Applicant Details", "Source, Amount, Use, and Location of Diversion Works", "Description of Diversion Works", "Completion Schedule", "Description of Proposed Use", "General"];
     } else {
       this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
     }
@@ -527,6 +782,7 @@ export class MapsFieldsComponent implements OnInit {
   populateReportsOfLicenseFields() {
     let knownKeys = ["confidence", "xmin", "ymin", "xmax", "ymax", "doc_width", "doc_height", "display_label"]
     let values = this.licenseReportsJson['values'];
+    let pagesArr = [];
     console.log(values);
     let valueKeys = Object.keys(values);
     let retArray: any = [];
@@ -539,20 +795,29 @@ export class MapsFieldsComponent implements OnInit {
         for(let j = 0; j < values[valueKeys[i]]['KV'].length; j++) {
           let tempV = values[valueKeys[i]]['KV'][j];
           if(tempV && Object.keys(values[valueKeys[i]]['KV'][j]).length != 0) {
-            let seObjKeys = Object.keys(values[valueKeys[i]]['KV'][j]);
-            for(let k = 0; k < seObjKeys.length; k++) {
-              if(!knownKeys.includes(seObjKeys[k])) {
-                values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[k]];
-                break;
-              }
-            }
+            // let seObjKeys = Object.keys(values[valueKeys[i]]['KV'][j]);
+            // for(let k = 0; k < seObjKeys.length; k++) {
+            //   if(!knownKeys.includes(seObjKeys[k])) {
+            //     values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[k]];
+            //     break;
+            //   }
+            // }
+            
+            values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j]["value"];
             docWidth = tempV['doc_width'];
             docHeight = tempV['doc_height'];
+            if(values[valueKeys[i]]['KV'][j]['display_label'].includes('Use Net Acreage')) {
+//IMPORTANT CONSOLE LOGS              
+              console.log( values[valueKeys[i]]['KV'][j]['display_value'], values[valueKeys[i]]['KV'][j])
+            }
             //values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
             values[valueKeys[i]]['KV'][j]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
             retArray.push(values[valueKeys[i]]['KV'][j]);
           }
           values[valueKeys[i]]['KV'][j]['page'] = i + 1;
+          if(!(pagesArr.includes(values[valueKeys[i]]['KV'][j]['page']))) {
+            pagesArr.push(values[valueKeys[i]]['KV'][j]['page']);
+          }
         }
       }
       if(values[valueKeys[i]]['SE']) {
@@ -577,6 +842,9 @@ export class MapsFieldsComponent implements OnInit {
                     values[valueKeys[i]]['SE'][j][seObjKeys[0]]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
                   }
                   values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page'] = i + 1;
+                  if(!(pagesArr.includes(values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page']))) {
+                    pagesArr.push(values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page']);
+                  }
                   break;
                 }
               }
@@ -592,11 +860,17 @@ export class MapsFieldsComponent implements OnInit {
           if(values[valueKeys[i]]['TE'][j]) {
             //values[valueKeys[i]]['TE'][j]['display_label'] = Object.keys(values[valueKeys[i]]['TE'][j])[0];
             values[valueKeys[i]]['TE'][j]['page'] = i + 1;
+            values[valueKeys[i]]['TE'][j]['transposed'] = false;
+            if(!(pagesArr.includes(values[valueKeys[i]]['TE'][j]['page']))) {
+              pagesArr.push(values[valueKeys[i]]['TE'][j]['page']);
+            }
             let allTableEntries = values[valueKeys[i]]['TE'][j][Object.keys(values[valueKeys[i]]['TE'][j])[0]];
             let headers = [];
             values[valueKeys[i]]['TE'][j]['display_label'] = allTableEntries['display_label'];
             console.log(allTableEntries)
             values[valueKeys[i]]['TE'][j]['bbox'] = this.calculateBoundingBoxes(allTableEntries['xmin'], allTableEntries['ymin'], allTableEntries['xmax'], allTableEntries['ymax'], docWidth, docHeight);
+            values[valueKeys[i]]['TE'][j]['docWidth'] = docWidth;
+            values[valueKeys[i]]['TE'][j]['docHeight'] = docHeight;
             console.log(values[valueKeys[i]]['TE'][j]['bbox'])
             if(allTableEntries && allTableEntries['1']) {
               console.log(allTableEntries, values[valueKeys[i]]['TE'][j])
@@ -608,7 +882,7 @@ export class MapsFieldsComponent implements OnInit {
               if(this.profileId == 5) {
             
                 if(values[valueKeys[i]]['TE'][j]['display_label'] === 'Storage Projects') {
-                  if((rows[rows.length - 1].filter(r => r === '')).length === rows[rows.length - 1].length) {
+                  if((rows[rows.length - 1].filter(r => r['value'] === '')).length === rows[rows.length - 1].length) {
                     rows.splice(rows.length - 1, 1);
                   }
                 }
@@ -627,8 +901,8 @@ export class MapsFieldsComponent implements OnInit {
                 
                 for(let r2 = 0; r2 < rows[r1].length; r2++) {
                 
-                  if(rows[r1][r2] && (rows[r1][r2].includes('NA') || rows[r1][r2].includes('MA'))) {
-                    rows[r1][r2] = '';
+                  if(rows[r1][r2] && (rows[r1][r2].value.includes('NA') || rows[r1][r2].value.includes('MA'))) {
+                    rows[r1][r2].value = '';
                   }
                 }
               }
@@ -643,17 +917,17 @@ export class MapsFieldsComponent implements OnInit {
               //For profiles where headers are not being passed
               //Adding a check to see if headers are passed
               if(headings.length === 4) {
-                let count = headings.filter(e => Number(e) > 1000).length;
-                let count2 = headings.filter(e => e === '').length;
+                let count = headings.filter(e => Number(e['value']) > 1000).length;
+                let count2 = headings.filter(e => e['value'] === '').length;
                 if(count === 0) {
                   let temp;
-                  count2 != 3 ? rows.unshift(headings) : temp = headings[0];
+                  count2 != 3 ? rows.unshift(headings) : temp = headings[0]['value'];
                   if (retArray[retArray.length - 1]['table'] != undefined) {
                     headings = retArray[retArray.length - 1]['table'][0];
-                    headings[0] = count2 != 3 ? '': temp;
+                    headings[0]['value'] = count2 != 3 ? '': temp;
                   } else {
-                    headings = ['', '2007', '2008', '2009'];
-                    count2 != 3 ? headings[0] = '': headings[0] = temp;
+                    headings = [{value: ''}, {value: '2007'}, {value: '2008'}, {value: '2009'}];
+                    count2 != 3 ? headings[0]['value'] = '': headings[0]['value'] = temp;
                   }
                 }
               }
@@ -673,14 +947,14 @@ export class MapsFieldsComponent implements OnInit {
               //   return element !== '';              
               // });
               for(let l = headings.length - 1; l >= 0; l--) {
-                if(headings[l] === '' && l != 0) {
+                if(headings[l]['value'] === '' && l != 0) {
                   headings.splice(l, 1)
                 }
               }
               console.log(headings);
               for(let k = 0; k < rows.length; k++) {
                 for(let l = rows[k].length - 1; l >= 0; l--) {
-                  if(rows[k][l] === '') {
+                  if(rows[k][l]['value'] === '') {
                     if(rows[k].length != headings.length)
                       rows[k].splice(l, 1)
                   }
@@ -701,6 +975,7 @@ export class MapsFieldsComponent implements OnInit {
               rows.unshift(headings);
               if(headings.length != 4) {
                 rows = this.transpose(rows);
+                values[valueKeys[i]]['TE'][j]['transposed'] = true;
               }
 
 
@@ -711,7 +986,7 @@ export class MapsFieldsComponent implements OnInit {
 
               //HardCoded Section Starts
               if(this.profileId == 7) {
-                rows.unshift(['', ''])
+                rows.unshift([{value: ''}, {value: ''}])
               }
               //HARDCODED Section Ends
 
@@ -723,8 +998,8 @@ export class MapsFieldsComponent implements OnInit {
               //Addition FOR Profile 3
               for(let m = 1; m < rows[0].length; m++) {
                 console.log(rows[0][m], Number(rows[0][m]))
-                if(isNaN(Number(rows[0][m]))) {
-                  let tArr = Array(rows[0].length).fill("");
+                if(isNaN(Number(rows[0][m]['value']))) {
+                  let tArr = Array(rows[0].length).fill({value: ""});
                   console.log(tArr);
                   rows.unshift(tArr);
                   break;
@@ -755,24 +1030,6 @@ export class MapsFieldsComponent implements OnInit {
                 values[valueKeys[i]]['TE'][j]['tab'] = name;
               }
 
-              if(this.profileId == 6) {
-                //change the entire table
-                if(values[valueKeys[i]]['TE'][j]['display_label'].includes('Beneficial Uses Of Water')) {
-                  rows = [['USE (COMPLETE FOR ALL PROJECTS)', '1969', '1970', '1971'],
-                  ['7. Acreage irrigated', '', '', ''],
-                  ['Crops grown:', '', '', ''],
-                  ['8. Stockwatering - number of stock', '', '', ''],
-                  ['kind of stock', '', '', ''],
-                  ['9. Domestic - number of persons', '', '', ''],
-                  ['garden area, etc.', '', '', ''],
-                  ['10. Recreational - nature of use', '', '', ''],
-                  ['11. Industrial - nature of use', '', '', ''],
-                  ['12. Municipal - approximate population', '', '', ''],
-                  ['13. Power generation - K.W.', '', '', ''],
-                  ['14. Other.', '', '', '']]
-                }
-              }
-
               //HARDCODED SECTION ENDS
               console.log(headings, rows, rows.length, rows[0].length)
               retArray.push({
@@ -782,12 +1039,11 @@ export class MapsFieldsComponent implements OnInit {
                 "section": values[valueKeys[i]]['TE'][j]['section'],
                 "tab": values[valueKeys[i]]['TE'][j]['tab'],
                 "bbox": values[valueKeys[i]]['TE'][j]['bbox'],
-                "sectionList": values[valueKeys[i]]['TE'][j]['section_list']
+                "docWidth": values[valueKeys[i]]['TE'][j]['docWidth'],
+                "docHeight": values[valueKeys[i]]['TE'][j]['docHeight'],
+                "sectionList": values[valueKeys[i]]['TE'][j]['section_list'],
+                "transposed": values[valueKeys[i]]['TE'][j]['transposed']
               })
-              // this.tableList.push({
-              //   "name": values[valueKeys[i]]['TE'][j]['display_label'],
-              //   "table": rows
-              // });
             }
           }
         }
@@ -808,25 +1064,38 @@ export class MapsFieldsComponent implements OnInit {
 
         if(temp['fieldType'] != 'table') {
           temp['display_value'] = retArray[i]['display_value'];
+          if(temp['display_value'] === undefined) {
+            console.log(temp)
+          }
           temp['bbox'] = retArray[i]['bbox'];
           temp['confidence'] = retArray[i]['confidence'];
           if(retArray[i]['page'] == undefined) {
             console.log(retArray[i]);
           }
           temp['page'] = retArray[i]['page'];
+          if(this.profileId === 9) {
+            temp['tab'] = 'Page ' + temp['page'];
+            if(!temp['page']) {
+              alert()
+            }
+          }
+            
         } else if(temp['fieldType'] === 'table') {
 
           console.log(retArray[i]);
           temp['display_value'] = retArray[i]['table'];
           temp['page'] = retArray[i]['page'];
+          temp['docWidth'] = retArray[i]['docWidth'];
+          temp['docHeight'] = retArray[i]['docHeight'];
           temp['section'] = retArray[i]['section'];
           temp['sectionList'] = retArray[i]['sectionList'];
           temp['tab'] = retArray[i]['tab'];
+          temp['transposed'] = retArray[i]['transposed'];
 
           let tempFormGroup: any = {};
           for (let a = 1; a < retArray[i]['table'].length; a++) {
             for (let b = 1; b < retArray[i]['table'][a].length; b++) {
-              tempFormGroup[retArray[i]['table'][a].length * a + b] = new FormControl(retArray[i]['table'][a][b]);
+              tempFormGroup[retArray[i]['table'][a].length * a + b] = new FormControl(retArray[i]['table'][a][b]['value']);
             }
           }
           let key = retArray[i]['display_label'];
@@ -855,9 +1124,10 @@ export class MapsFieldsComponent implements OnInit {
             "sectionList": retArray[i]['sectionList'],
             "tab": retArray[i]['tab'],
             "full_table": temp,
+            "transposed":  retArray[i]['transposed'] 
           });
         }
-      }   
+      }
       //m.set(this.allFieldsFromProfileDetails[i]['display_label'], this.allFieldsFromProfileDetails[i])
     }
 
@@ -878,6 +1148,8 @@ export class MapsFieldsComponent implements OnInit {
       for (let a = 1; a < newTable['table'].length; a++) {
         for (let b = 0; b < newTable['table'][a].length; b++) {
           newTempFormGroup[newTable['table'][a].length * a + b] = new FormControl(newTable['table'][a][b]);
+          console.log(newTempFormGroup);
+          console.log( (newTable['table'][a].length * a) + b)
         }
       }
       let newkey =  newTable['name'];
@@ -893,7 +1165,15 @@ export class MapsFieldsComponent implements OnInit {
     }    
     //HARD CODED SECTION ENDS
 
-    this.tabsList = ["Summary"];
+    if(this.profileId === 9) {
+      this.tabsList = [];
+      for (let i = 0; i < pagesArr.length; i++) {
+        this.tabsList.push('Page ' + pagesArr[i]);
+      }
+    } else {
+      this.tabsList = ["Summary"];
+    }
+    
     
 
     this.tableList.forEach(element => {
@@ -909,6 +1189,15 @@ export class MapsFieldsComponent implements OnInit {
       if(value['fieldType'] != 'table')
         this.allFieldsFromProfileDetails.push(value)
     }
+    if(this.profileId === 9) {
+      for(let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
+        if(this.allFieldsFromProfileDetails[i]['page'] == undefined) {
+          this.allFieldsFromProfileDetails[i]['page'] = this.allFieldsFromProfileDetails[i]['tempTab'].split(' ')[1];
+          this.allFieldsFromProfileDetails[i]['tab'] = this.allFieldsFromProfileDetails[i]['tempTab'];
+        }
+      }
+    }
+    
     console.log(this.allFieldsFromProfileDetails)
     this.reportsOfLicenseFields = [...this.allFieldsFromProfileDetails];
     
@@ -970,21 +1259,42 @@ export class MapsFieldsComponent implements OnInit {
     }
    
    
-    let rows = []
+    let rows = [];
+    let rowsWithData = []
+    this.separateTableValuesForLicenseSummary = [];
     for(let i = 0; i < this.allFieldsFromProfileDetails.length; i++) {
       let name = this.allFieldsFromProfileDetails[i]['display_label']
       if(name === 'Purpose Of Water Used') {
         if(this.allFieldsFromProfileDetails[i]['display_value']) {
+          console.log(this.allFieldsFromProfileDetails[i])
           let separateValues = this.allFieldsFromProfileDetails[i]['display_value'].split('|');
+          console.log(separateValues)
           const numOfRows = separateValues.length;
   
           for(let j = 0; j < numOfRows; j++) {
             let newRow = [];
+            let newRowWithData = [];
             newRow.push(separateValues[j])
+            newRowWithData.push({
+              id: this.allFieldsFromProfileDetails[i]['id'],
+              name: name,
+              index: j,
+              value: separateValues[j]
+            })
+            this.separateTableValuesForLicenseSummary.push({
+              "name": name,
+              "id": this.allFieldsFromProfileDetails[i]['id'],
+              "index": j,
+              "value": separateValues[j]
+            })
             rows.push(newRow);
+            rowsWithData.push(newRowWithData);
           }
         } 
+        
         this.allFieldsFromProfileDetails.splice(i, 1);
+        
+        
         if(m.has(name))
             m.delete(name) 
         console.log(m);   
@@ -1005,18 +1315,62 @@ export class MapsFieldsComponent implements OnInit {
           for (let j = 0; j < rows.length; j++) {
             if (separateValues[j]) {
               rows[j].push(separateValues[j])
+              rowsWithData[j].push({
+                name: name,
+                id: this.allFieldsFromProfileDetails[i]['id'],
+                index: j,
+                value: separateValues[j] 
+              })
+              this.separateTableValuesForLicenseSummary.push({
+                "name": name,
+                "id": this.allFieldsFromProfileDetails[i]['id'],
+                "display_value": separateValues[j],
+                "index": j
+              })
             } else {
               rows[j].push('')
+              rowsWithData[j].push({
+                name: name,
+                id: this.allFieldsFromProfileDetails[i]['id'],
+                index: j,
+                value: '' 
+              })
+              this.separateTableValuesForLicenseSummary.push({
+                "name": name,
+                "id": this.allFieldsFromProfileDetails[i]['id'],
+                "display_value": separateValues[j],
+                "index": j
+              })
             }
           }
+
+          
+          console.log( this.allFieldsFromProfileDetails[i]['display_value'], this.separateTableValuesForLicenseSummary)
           if(m.has(name))
             m.delete(name) 
         }
       }
     }
-
+    rowsWithData.unshift(newHeadings)
     rows.unshift(newHeadings)
+    for (let a = 1; a < rows.length; a++) {
+      for (let b = 0; b <rows[a].length; b++) {
+        console.log(rows[a].length * a + b, rows[a][b])
+        //tempFormGroup[retArray[i]['table'][a].length * a + b] = new FormControl(retArray[i]['table'][a][b]['value']);
+      }
+    }
+
+    for (let a = 1; a < rowsWithData.length; a++) {
+      for (let b = 0; b <rowsWithData[a].length; b++) {
+        this.separateTableValuesForLicenseSummary.map(ele => {
+          if(ele['id'] === rowsWithData[a][b]['id'] && ele['index'] === rowsWithData[a][b]['index']) {
+            ele['place'] = rowsWithData[a].length * a + b
+          }
+        })
+      }
+    }
     console.log(newHeadings, rows);
+    console.log(newHeadings, rowsWithData);
     return {
       "rows": rows,
       "headings": newHeadings,
