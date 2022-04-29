@@ -1,10 +1,12 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentService } from '../_services/document.service';
 import { CookieService } from 'ngx-cookie-service';
 import { loginService } from '../_services/login.service';
 import { ActivatedRoute } from '@angular/router';
 import * as cloneDeep from 'lodash/cloneDeep';
+import { AppConfig } from 'src/assets/config/app-config';
+import { MatDialog } from '@angular/material/dialog';
 declare var drawHighlightsUsingBboxes: any;
 declare var clearAllHighlights: any;
 class field {
@@ -29,6 +31,7 @@ export class MapsFieldsComponent implements OnInit {
   profileDetails: any = null;
   allFieldsFromProfileDetails: any = [];
   licenseReportsJson: any = {};
+  licenseReportsProperties = {};
   reportsOfLicenseFields: any [];
   reportsForm: FormGroup;
   reportsOfLicenseFiltered: any = [];
@@ -48,47 +51,68 @@ export class MapsFieldsComponent implements OnInit {
   keyForTableFormName = null;
   shouldDisplaySectionName = true;
   separateTableValuesForLicenseSummary = [];
+  checkIfAmountsSameIsChecked = false;
+  popupMessage = '';
+  isProcessing = false;
   @Output() documentTypeEvent = new EventEmitter<string>();
-
+  @Output() closeCaseEvent = new EventEmitter<void>();
   @Input() selectedDoc = 'Maps';
   @Input() vaultDocId = '';
+  @Input() isCaseClosed = false;
+  @ViewChild('popupDialog', { static: false } ) popupDialog: TemplateRef<any>;
   constructor(
     private docService: DocumentService,
     private cookieService: CookieService,
     private fb: FormBuilder,
     private loginSvc:loginService,
-    private route: ActivatedRoute) { }
+    private route: ActivatedRoute,
+    private config: AppConfig,
+    public dialog: MatDialog,) { }
 
   async ngOnInit() {
-    if(this.reportsForm != undefined) {
-      this.reportsForm.reset();
-    }
 
-    if(this.selectedDoc === 'LicenseReports') {
-      this.licenseReportsJson = (await this.docService.getExtractedJson(this.vaultDocId).toPromise())['metadata']['properties']['Extracted Json'];
-      this.staticLicenseReportsJson = cloneDeep(this.licenseReportsJson);
-      this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
-      this.staticProfileDetailsJson = cloneDeep(this.profileDetails);
-      //this.profileDetails = this.docService.getProfileDetails2();
-      console.log(this.profileDetails, this.licenseReportsJson);
-      this.documentType = this.licenseReportsJson['docType'];
-      this.profileId = this.licenseReportsJson['profile_id'];
-      this.documentTypeChanged(this.documentType);
-      this.populateReportsOfLicenseFieldsUsingProfileDetails();
-      this.fullTableArray = [];
-      this.tableSection = null;
-      this.currentAmountsOfWaterDivertedTable = [];
-      
-      let tempArray = [] as any;
-      this.populateReportsOfLicenseFields();
-      this.shouldDisplayForm = true;
-      this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['table'] == '');
-      this.tabChanged({
-        "tab": {
-          "textLabel": this.tabsList[0]
+    if (!this.isCaseClosed) {
+      this.isProcessing = true;
+      if (this.reportsForm != undefined) {
+        this.reportsForm.reset();
+      }
+
+      if (this.selectedDoc === 'LicenseReports') {
+        try {
+
+          this.licenseReportsProperties = (await this.docService.getExtractedJson(this.vaultDocId).toPromise())['metadata']['properties']
+          this.licenseReportsJson = this.licenseReportsProperties['Extracted Json'];
+          this.staticLicenseReportsJson = cloneDeep(this.licenseReportsJson);
+          this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
+          this.staticProfileDetailsJson = cloneDeep(this.profileDetails);
+          //this.profileDetails = this.docService.getProfileDetails2();
+          this.isProcessing = false;
+          console.log(this.profileDetails, this.licenseReportsJson);
+          this.documentType = this.licenseReportsJson['docType'];
+          this.profileId = this.licenseReportsJson['profile_id'];
+          this.documentTypeChanged(this.documentType);
+          this.populateReportsOfLicenseFieldsUsingProfileDetails();
+          this.fullTableArray = [];
+          this.tableSection = null;
+          this.currentAmountsOfWaterDivertedTable = [];
+
+          let tempArray = [] as any;
+          this.populateReportsOfLicenseFields();
+          this.shouldDisplayForm = true;
+          this.reportsOfLicenseFiltered = this.reportsOfLicenseFields.filter((element: any) => element['table'] == '');
+          this.tabChanged({
+            "tab": {
+              "textLabel": this.tabsList[0]
+            }
+          })
+  
+        } catch (err) {
+          console.log(err);
+        } finally {
+          this.isProcessing = false;
         }
-      })
-    }    
+      }
+    }
   }
 
   documentTypeChanged(value: string) {
@@ -155,12 +179,121 @@ export class MapsFieldsComponent implements OnInit {
   }
 
   onClickInInput(field) {
-    console.log(field)
     if(field['page'] != null && field['bbox'] != null && field['page'] != undefined && field['bbox'] != undefined) {
       new drawHighlightsUsingBboxes(field['page'], field['bbox'], field['confidence'])
     } else {
       new clearAllHighlights()
     }
+  
+  }
+
+  onCheckboxChange(field, documentType, event) {
+    if(event && field['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?')) {
+      alert()
+      let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
+      if(event.target.checked) {
+        let val = this.reportsForm.get(documentType).get(conservationEfforts['id']).value
+        if(val == undefined || val == null || val == '') {
+          this.reportsForm.get(documentType).get(conservationEfforts['id']).addValidators(Validators.required)
+          this.reportsForm.get(documentType).get(conservationEfforts['id']).updateValueAndValidity();
+          console.log(this.reportsForm.get(documentType).get(conservationEfforts['id']))
+        }
+      } else {
+        this.reportsForm.get(documentType).get(conservationEfforts['id']).clearValidators();
+        this.reportsForm.get(documentType).get(conservationEfforts['id']).updateValueAndValidity();
+      }
+    } 
+
+
+    if(event && field['display_label'].includes('I have changed the intake location, type(s) of use, and/or place of use')) {
+      let remarks = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Remarks'))
+      if(event.target.checked) {
+        let val = this.reportsForm.get(documentType).get(remarks['id']).value
+        if(val == undefined || val == null || val == '') {
+          this.reportsForm.get(documentType).get(remarks['id']).addValidators(Validators.required)
+          this.reportsForm.get(documentType).get(remarks['id']).updateValueAndValidity();
+          console.log(this.reportsForm.get(documentType).get(remarks['id']))
+        }
+      } else {
+        this.reportsForm.get(documentType).get(remarks['id']).clearValidators();
+        this.reportsForm.get(documentType).get(remarks['id']).updateValueAndValidity();
+      }
+    } 
+
+    if(event && field['display_label'].includes('Check if amounts are same')) {
+  
+      let newTableValues = this.reportsForm.value['Face Value'];
+      let wholeTableFromList2 = this.tableList.find(ele => ele['name'].includes("Amount of Water Beneficially Used"))
+      
+      console.log(wholeTableFromList2)
+      let key = wholeTableFromList2['name'];
+      if(event.target.checked) {
+        this.checkIfAmountsSameIsChecked = true;
+
+        for (let m = 1; m < wholeTableFromList2['table'].length; m++) {
+          for (let n = 1; n < wholeTableFromList2['table'][m].length; n++) {
+            wholeTableFromList2['table'][m][n]['value'] = newTableValues[wholeTableFromList2['table'][m].length * m + n]
+          }
+        }
+        wholeTableFromList2['full_table']['table'] = wholeTableFromList2['table'];
+
+        let tempFormGroup: any = {};
+        for (let a = 1; a < wholeTableFromList2['table'].length; a++) {
+          for (let b = 1; b < wholeTableFromList2['table'][a].length; b++) {
+            tempFormGroup[wholeTableFromList2['table'][a].length * a + b] = new FormControl(wholeTableFromList2['table'][a][b]['value']);
+          }
+        }
+        console.log(tempFormGroup);
+        
+        let temFbGroup = {};
+        temFbGroup[key] = new FormGroup(tempFormGroup)
+        this.reportsForm.setControl(key, this.fb.group(tempFormGroup));
+        console.log(this.reportsForm)
+        this.reportsForm.get(key).updateValueAndValidity()
+      } else {
+        this.popupMessage = 'You are about to clear the table. You may lose the updated values. Do you want to proceed?';
+        this.dialog.open(this.popupDialog,
+          { width: '500px', data: {wholeTableFromList2: wholeTableFromList2, key: key, event: this.reportsForm.get(documentType).get(field['id'])} });
+          //event.target.checked =true;
+        // this.checkIfAmountsSameIsChecked = false;
+        // let tempFormGroup: any = {};
+        // for (let a = 1; a < wholeTableFromList2['table'].length; a++) {
+        //   for (let b = 1; b < wholeTableFromList2['table'][a].length; b++) {
+        //     tempFormGroup[wholeTableFromList2['table'][a].length * a + b] = '';
+        //   }
+        // }
+        // this.reportsForm.get(key).reset(tempFormGroup);
+        // this.reportsForm.get(key).updateValueAndValidity()
+      }
+    }
+
+      //if check if amounts is turned off then clear the form and if it is turned on then copy the table again and recreate the formgroup
+    ///if and during the period covered... is checked unchecked, make conservation efforts valid/invalid
+    this.onClickInInput(field);
+  }
+
+  resetTable(data?, cancel?) {
+    this.popupMessage = '';
+    if (cancel) {
+      data.event.setValue(!data.event.value)
+      data.event.updateValueAndValidity();
+      console.log(data.event.value);
+      return;
+    }
+    if(data) {
+      this.checkIfAmountsSameIsChecked = false;
+      let tempFormGroup: any = {};
+      for (let a = 1; a < data.wholeTableFromList2['table'].length; a++) {
+        for (let b = 1; b < data.wholeTableFromList2['table'][a].length; b++) {
+          tempFormGroup[data.wholeTableFromList2['table'][a].length * a + b] = '';
+        }
+      }
+
+      this.reportsForm.get(data.key).reset(tempFormGroup);
+      this.reportsForm.get(data.key).updateValueAndValidity()
+    }
+
+    
   }
 
   onClickInInputFieldInTable(field, tablePage, docWidth, docHeight) {
@@ -177,158 +310,327 @@ export class MapsFieldsComponent implements OnInit {
     }
   }
 
-  completeForm() {
-
-    let allresults: any = [];
-    for(let i = 0; i < this.staticProfileDetailsJson.length; i++) {
-      let tempResult = this.staticProfileDetailsJson[i]['annotations'][0]['result'].map(ele => {
-        ele['page'] = i + 1;
-        return ele;
-      })
-      allresults = allresults.concat(tempResult)
-    }
-
-    for(let i = 0; i < allresults.length; i++) {
-      allresults[i]['display_label'] = allresults[i]['meta']['text'][0].split('|')[2].trim();
-    }
-
-    //Get and Store All values from documentTypeForm
-    let keys = Object.keys(this.reportsForm.value[this.documentType])
-    console.log(keys)
-    for(let i = 0; i < allresults.length; i++) {
-      for(let j = 0; j < keys.length; j++) {
-        if(allresults[i]['id'] === keys[j]) {
-          console.log('aaa')
-          allresults[i]['final_display_value'] = this.reportsForm.value[this.documentType][keys[j]];
-          break;
-        }
-      }
-    }
-
-    keys = Object.keys(this.reportsForm.value)
-    for(let i = 0; i < keys.length; i++) {
-      if(keys != this.documentType) {
-        for(let j = 0; j < allresults.length; j++) {
-          if(allresults[j]['display_label'] === keys[i]) {
-            console.log('bbb')
-            allresults[j]['final_display_value'] = this.reportsForm.value[keys[i]];
-            break;
-          }
-        }
-      }
-    }
-    console.log(this.tableList);
-
+  prefillStaticJson() {
     let pageKeys = Object.keys(this.staticLicenseReportsJson['values'])
     for(let i = 0;  i < pageKeys.length; i++) {
-      let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
-      console.log(tempAllResultsByPage);
-      let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
-      let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
-      let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
+      // let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
+      // console.log(tempAllResultsByPage);
+      // let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
+      // let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
+      // let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
 
       let keys = Object.keys(this.staticLicenseReportsJson['values'][pageKeys[i]]);
       for(let j = 0; j < keys.length; j++) {
         if(keys[j] === 'KV') {
-          for(let k = 0; k < tempAllResultsByPageKV.length; k++) {
-            this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele =>  {
-              if(ele['display_label'] === tempAllResultsByPageKV[k]['display_label']) {
-                ele['final_display_value'] = tempAllResultsByPageKV[k]['final_display_value'];
-              } else {
-                let val = '';
-                let shouldAdd = false;
-                for(let a = 0; a < this.separateTableValuesForLicenseSummary.length; a++) {
-                  let summaryEle = this.separateTableValuesForLicenseSummary[a];
-                  if(summaryEle['name'] === ele['display_label']) {
-                    shouldAdd = true;
-                    if(val != '') {
-                      if(summaryEle['display_value']) {
-                        val += ('|' + summaryEle['display_value'])
-                      } else {
-                        if(summaryEle['value']) {
-                          val += ('|' + summaryEle['value'])
-                        } else {
-                          val += ('|' + '')
-                        }
-                        
-                      }
-                      
-                    } else {
-                      if(summaryEle['display_value']) {
-                        val = summaryEle['display_value']
-                      } else {
-                        if(summaryEle['value']) {
-                          val = summaryEle['value']
-                        } else {
-                          val = ''
-                        }
-                        
-                      }
-                      
-                    }
-                  }
-                }
-                if(shouldAdd) {
-                  ele['tempVal'] = val;
-                }
-              }              
-            })
+          for(let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
+            let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
+            ele['final_display_value'] = '';            
           }
         } else if(keys[j] === 'SE') {
-          //console.log(tempAllResultsByPageSE)
-          for(let k = 0; k < tempAllResultsByPageSE.length; k++) {
-            let SEKeys = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]]
-            this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
-              let eleKeys = Object.keys(ele)
-              if(ele[eleKeys[0]]['display_label'] === tempAllResultsByPageSE[k]['display_label']) {
-                ele[eleKeys[0]]['final_display_value'] = tempAllResultsByPageSE[k]['final_display_value'];
-              }
-            })
+          for(let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++ ) {
+            let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
+            let eleKeys = Object.keys(ele);
+            ele[eleKeys[0]]['final_display_value'] = false;
           }
         } else if(keys[j] === 'TE') {
-          let tempTable = null;
-          let tempTableFromForm = null;
-          for(let k = 0; k < this.tableList.length; k++) {
-            for(let l = 0; l < tempAllResultsByPageTE.length; l++) {
-              if(this.tableList[k]['name'] === tempAllResultsByPageTE[l]['display_label']) {
-                tempTable = cloneDeep(this.tableList[k]['full_table']);
-                tempTableFromForm = cloneDeep(tempAllResultsByPageTE[l]['final_display_value']);
-                
-
-                for (let m = 1; m < tempTable.display_value.length; m++) {
-                  for (let n = 1; n < tempTable.display_value[m].length; n++) {
-                    tempTable.display_value[m][n]['value'] = tempTableFromForm[tempTable.display_value[m].length * m + n]
-                  }
-                }
-                if(tempTable["transposed"]) {
-                  tempTable['display_value'] = cloneDeep((this.transpose(tempTable['display_value'])))
-                }
-                this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
-                let eleKeys = Object.keys(ele);
-                  if(ele[eleKeys[0]]['display_label'] === tempTable['display_label']) {
-                    ele[eleKeys[0]]['final_display_value'] = tempTable['display_value'];
-                  }
-                })
-                
-              }
-            }
+          for(let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
+            let ele =  this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
+            let eleKeys = Object.keys(ele);
+            ele[eleKeys[0]]['final_display_value'] = cloneDeep(ele[eleKeys[0]][1]);
           }
         }
       }
     }
+  }
+
+  openCompletePopup(save) {
+    if(save) {
+      this.popupMessage = 'Are you sure you want to save the indexing data?'
+      this.dialog.open(this.popupDialog, {width: '500px', data: {save: save} })
+    } else {
+      this.popupMessage = 'Are you sure you want to complete the indexing process? Note: This case will be closed and won\'t be available for editing.'
+      this.dialog.open(this.popupDialog, {width: '500px', data: {save: save} })
+    }
+  }
+
+  async completeForm(save?) {
+    this.isProcessing = true;
+    let applicationID;
+    let allresults: any = [];
+    try {
+
+      for (let i = 0; i < this.staticProfileDetailsJson.length; i++) {
+        let tempResult = this.staticProfileDetailsJson[i]['annotations'][0]['result'].map(ele => {
+          ele['page'] = i + 1;
+          return ele;
+        })
+        allresults = allresults.concat(tempResult)
+      }
+
+      for (let i = 0; i < allresults.length; i++) {
+        allresults[i]['display_label'] = allresults[i]['meta']['text'][0].split('|')[2].trim();
+      }
+
+      //Get and Store All values from documentTypeForm
+      let keys = Object.keys(this.reportsForm.value[this.documentType])
+      console.log(keys)
+      for (let i = 0; i < allresults.length; i++) {
+        for (let j = 0; j < keys.length; j++) {
+          if (allresults[i]['id'] === keys[j]) {
+            console.log('aaa')
+            allresults[i]['final_display_value'] = this.reportsForm.value[this.documentType][keys[j]];
+            break;
+          }
+        }
+      }
+
+      keys = Object.keys(this.reportsForm.value)
+      for (let i = 0; i < keys.length; i++) {
+        if (keys != this.documentType) {
+          for (let j = 0; j < allresults.length; j++) {
+            if (allresults[j]['display_label'] === keys[i]) {
+              console.log('bbb')
+              allresults[j]['final_display_value'] = this.reportsForm.value[keys[i]];
+              break;
+            }
+          }
+        }
+      }
+      console.log(this.tableList);
+
+      this.prefillStaticJson()
+
+      let pageKeys = Object.keys(this.staticLicenseReportsJson['values'])
+      for (let i = 0; i < pageKeys.length; i++) {
+        let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
+        console.log(tempAllResultsByPage);
+        let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
+        let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
+        let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
+
+        let keys = Object.keys(this.staticLicenseReportsJson['values'][pageKeys[i]]);
+        for (let j = 0; j < keys.length; j++) {
+          if (keys[j] === 'KV') {
+            for (let k = 0; k < tempAllResultsByPageKV.length; k++) {
+              this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
+                if (ele['display_label'] === tempAllResultsByPageKV[k]['display_label']) {
+                  if (tempAllResultsByPageKV[k]['final_display_value'])
+                    ele['final_display_value'] = tempAllResultsByPageKV[k]['final_display_value'];
+                  if (save) {
+                    ele['value'] = tempAllResultsByPageKV[k]['final_display_value'];
+                  }
+
+                  if (ele['display_label'].includes('Application Number')) {
+                    applicationID = ele['final_display_value']
+                  }
+                } else {
+                  let val = '';
+                  let shouldAdd = false;
+                  for (let a = 0; a < this.separateTableValuesForLicenseSummary.length; a++) {
+                    let summaryEle = this.separateTableValuesForLicenseSummary[a];
+                    if (summaryEle['name'] === ele['display_label']) {
+                      shouldAdd = true;
+                      if (val != '') {
+                        if (summaryEle['display_value']) {
+                          val += ('|' + summaryEle['display_value'])
+                        } else {
+                          if (summaryEle['value']) {
+                            val += ('|' + summaryEle['value'])
+                          } else {
+                            val += ('|' + '')
+                          }
+
+                        }
+
+                      } else {
+                        if (summaryEle['display_value']) {
+                          val = summaryEle['display_value']
+                        } else {
+                          if (summaryEle['value']) {
+                            val = summaryEle['value']
+                          } else {
+                            val = ''
+                          }
+
+                        }
+
+                      }
+                    }
+                  }
+                  if (shouldAdd) {
+                    if (val)
+                      ele['tempVal'] = val;
+                  }
+                }
+              })
+            }
+          } else if (keys[j] === 'SE') {
+            //console.log(tempAllResultsByPageSE)
+            for (let k = 0; k < tempAllResultsByPageSE.length; k++) {
+              let SEKeys = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]]
+              this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
+                let eleKeys = Object.keys(ele)
+                if (ele[eleKeys[0]]['display_label'] === tempAllResultsByPageSE[k]['display_label']) {
+                  if (tempAllResultsByPageSE[k]['final_display_value'])
+                    ele[eleKeys[0]]['final_display_value'] = tempAllResultsByPageSE[k]['final_display_value'];
+
+                  if (save) {
+                    if (ele[eleKeys[0]]['final_display_value']) {
+                      ele[eleKeys[0]]['NO'] = 'NOT_SELECTED';
+                      ele[eleKeys[0]]['YES'] = 'SELECTED';
+                    } else {
+                      ele[eleKeys[0]]['YES'] = 'NOT_SELECTED';
+                      ele[eleKeys[0]]['NO'] = 'SELECTED';
+                    }
+                  }
+                }
+              })
+            }
+          } else if (keys[j] === 'TE') {
+            let tempTable = null;
+            let tempTableFromForm = null;
+            for (let k = 0; k < this.tableList.length; k++) {
+              for (let l = 0; l < tempAllResultsByPageTE.length; l++) {
+                if (this.tableList[k]['name'] === tempAllResultsByPageTE[l]['display_label']) {
+                  tempTable = cloneDeep(this.tableList[k]['full_table']);
+                  tempTableFromForm = cloneDeep(tempAllResultsByPageTE[l]['final_display_value']);
+                  console.log(tempTable, tempTableFromForm);
+
+                  for (let m = 1; m < tempTable.display_value.length; m++) {
+                    for (let n = 1; n < tempTable.display_value[m].length; n++) {
+                      tempTable.display_value[m][n]['value'] = tempTableFromForm[tempTable.display_value[m].length * m + n]
+                    }
+                  }
+                  if (tempTable["transposed"]) {
+                    tempTable['display_value'] = cloneDeep((this.transpose(tempTable['display_value'])))
+                  }
+                  this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
+                    let eleKeys = Object.keys(ele);
+                    if (ele[eleKeys[0]]['display_label'] === tempTable['display_label']) {
+                      if (tempTable['display_value'])
+                        ele[eleKeys[0]]['final_display_value'] = tempTable['display_value'];
+                      if (save) {
+                        ele[eleKeys[0]]['1'] = tempTable['display_value'];
+                      }
+
+                    }
+                  })
+
+                }
+              }
+            }
+          }
+        }
+
+        for (let j = 0; j < keys.length; j++) {
+
+          if (keys[j] === 'KV') {
+            for (let l = 0; l < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; l++) {
+              let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][l];
+              if (ele['tempVal']) {
+                ele['final_display_value'] = cloneDeep(ele['tempVal']);
+                if (save) {
+                  ele['value'] = cloneDeep(ele['tempVal']);
+                }
+
+              }
+
+              if (ele['final_display_value'] == undefined) {
+                ele['final_display_value'] = '';
+                if (save) {
+                  ele['value'] = '';
+                }
+              }
+            }
+          }
+
+          if (keys[j] === 'SE') {
+            //console.log(tempAllResultsByPageSE)
+            for (let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
+              let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
+              let eleKeys = Object.keys(ele);
+              if (ele[eleKeys[0]]['final_display_value'] == undefined) {
+                ele[eleKeys[0]]['final_display_value'] = false;
+
+                if (save) {
+                  ele[eleKeys[0]]['NO'] = 'SELECTED';
+                  ele[eleKeys[0]]['YES'] = 'SELECTED';
+                }
+
+              }
+            }
+          }
+
+        }
+      }
 
 
-    // let updateMetadataBody = {
-    //   docId: "",
-    //   category_id: 1,
-    //   properties: {
-    //     "Case ID": "",
+      let updateMetadataBody = {
+        docId: this.staticLicenseReportsJson['vault_doc_id'],
+        category_id: 1,
+        properties: {
+          "Case ID": this.licenseReportsProperties['Case ID'],
+          "Extracted Json": this.staticLicenseReportsJson
+        }
+      }
+      console.log(updateMetadataBody);
+      const updateMetadataResp = await this.docService.updateMetadata(updateMetadataBody).toPromise();
+      console.log(updateMetadataResp)
 
-    //   }
-    // }
+      let updateJsonToCsv;
+      if (!save) {
+        let jsonToCsvBody = {
+          vault_doc_id: this.staticLicenseReportsJson['vault_doc_id']
+        }
+        updateJsonToCsv = await this.docService.convertFromJsonToCsv(jsonToCsvBody).toPromise();
+        console.log(updateJsonToCsv)
+        let urlResp = await this.docService.getDocumentPresignedUrl(this.staticLicenseReportsJson['vault_doc_id']).toPromise()
+        urlResp = urlResp.split(' ')[1];
+        console.log(urlResp);
 
+        let imgUrl = this.config.getConfig('imageUrl') + this.staticLicenseReportsJson['vault_doc_id'];
+        let docType = "Report Of Licensee";
+        if (this.profileId == 11) {
+          docType = "Progress Report by Permittee"
+        } else if (this.profileId == 10) {
+          docType = "License For Diversions"
+        } else if (this.profileId == 9) {
+          docType = "Application to Appropriate Unappropriated Water"
+        }
+        let complianceData = {
+          "vault_id": this.staticLicenseReportsJson['vault_doc_id'],
+          "applicationId": applicationID,
+          "pdfURL": urlResp,
+          "salesforceImageURL": imgUrl,
+          "docType": docType
+        }
+        await this.docService.compliancePostCall(complianceData).toPromise();
+        this.isProcessing = false;
+      }
 
-    console.log(this.staticLicenseReportsJson);
+      this.isProcessing = false;
+      if (save && updateMetadataResp.toString().toLowerCase() === 'success') {
+        this.popupMessage = 'Case Saved Successfully. You may return to this screen later to continue indexing.'
+        this.dialog.open(this.popupDialog, { width: '500px' })
+      } else if (save && updateMetadataResp.toString().toLowerCase() != 'success') {
+        this.popupMessage = 'Error saving indexing data.'
+        this.dialog.open(this.popupDialog, { width: '500px' })
+      }
+
+      console.log(this.staticLicenseReportsJson);
+      if (!save && updateMetadataResp.toString().toLowerCase() === 'success' && updateJsonToCsv) {
+        let salesforceRes = await this.docService.salesforceCaseCloseCall({
+          "caseId": this.licenseReportsProperties['Case ID']
+        })
+        if(salesforceRes.toString().includes('Updated Succesfully'))
+          this.closeCaseEvent.emit();
+      }
+
+    } catch (err) {
+      console.log(err);
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
 
@@ -779,6 +1081,10 @@ export class MapsFieldsComponent implements OnInit {
     //this.sectionList = ["Applicant Details", "License Summary", "Compliance", "Conservation of Water/Water Quality/Conjunctive Use"];
   }
 
+  callFormGroupFromReportsForm(name) : FormGroup {
+    return this.reportsForm.get(name) as FormGroup;
+  }
+
   populateReportsOfLicenseFields() {
     let knownKeys = ["confidence", "xmin", "ymin", "xmax", "ymax", "doc_width", "doc_height", "display_label"]
     let values = this.licenseReportsJson['values'];
@@ -846,6 +1152,14 @@ export class MapsFieldsComponent implements OnInit {
                     pagesArr.push(values[valueKeys[i]]['SE'][j][seObjKeys[0]]['page']);
                   }
                   break;
+                }
+              }
+
+              if(values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_label'].includes('Check if amounts')) {
+                if(values[valueKeys[i]]['SE'][j][seObjKeys[0]]['display_value']) {
+                  this.checkIfAmountsSameIsChecked = true;
+                } else {
+                  this.checkIfAmountsSameIsChecked = false;
                 }
               }
               retArray.push(values[valueKeys[i]]['SE'][j][seObjKeys[0]])
@@ -1064,6 +1378,7 @@ export class MapsFieldsComponent implements OnInit {
 
         if(temp['fieldType'] != 'table') {
           temp['display_value'] = retArray[i]['display_value'];
+          
           if(temp['display_value'] === undefined) {
             console.log(temp)
           }
@@ -1083,7 +1398,15 @@ export class MapsFieldsComponent implements OnInit {
         } else if(temp['fieldType'] === 'table') {
 
           console.log(retArray[i]);
-          temp['display_value'] = retArray[i]['table'];
+          if(temp['display_label'].includes('Amount of Water Beneficially Used') && this.checkIfAmountsSameIsChecked) {
+            
+            let wholeTableFromList = this.tableList.find(ele => ele['name'].includes("Face Value"))
+            console.log(wholeTableFromList);
+            temp['display_value'] = cloneDeep(wholeTableFromList['table']);
+            retArray[i]['table'] = cloneDeep(wholeTableFromList['table']);
+          } else {
+            temp['display_value'] = retArray[i]['table'];
+          }
           temp['page'] = retArray[i]['page'];
           temp['docWidth'] = retArray[i]['docWidth'];
           temp['docHeight'] = retArray[i]['docHeight'];
@@ -1207,11 +1530,45 @@ export class MapsFieldsComponent implements OnInit {
 
     let tempFormGroup: any = {};
     this.reportsOfLicenseFields.forEach(element => {
+      // if(element['display_label'] == 'Conservation Efforts') {
+      //   element['display_value'] = undefined;
+      // }
       if(element['display_value']) {
-        tempFormGroup[element.id] = new FormControl(element['display_value'] || '', Validators.required);
+        if(element['display_label'].includes('Application Number')) {
+          tempFormGroup[element.id] = new FormControl(element['display_value'] || '', Validators.required);
+          // element['required'] = true;
+        } else {
+          tempFormGroup[element.id] = new FormControl(element['display_value'] || '');
+        }
       } else {
-        tempFormGroup[element.id] = new FormControl(element['fieldType'] === 'checkbox' ? false:'', Validators.required);
+        tempFormGroup[element.id] = new FormControl(element['fieldType'] === 'checkbox' ? false:'');
       }
+    });
+
+    this.reportsOfLicenseFields.forEach(element => {
+      if (element['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?') && element['display_value'] == true) {
+        let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
+        console.log(conservationEfforts, conservationEfforts['display_value'])
+
+        if (conservationEfforts['display_value'] == undefined || conservationEfforts['display_value'] == null || conservationEfforts['display_value'] == '') {
+          console.log(tempFormGroup, conservationEfforts['id']);
+          // alert()
+          tempFormGroup[conservationEfforts['id']].addValidators(Validators.required)
+          tempFormGroup[conservationEfforts['id']].updateValueAndValidity();
+        }
+      }
+
+      // if (element['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?') && element['display_value'] == true) {
+      //   let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
+      //   console.log(conservationEfforts, conservationEfforts['display_value'])
+
+      //   if (conservationEfforts['display_value'] == undefined || conservationEfforts['display_value'] == null || conservationEfforts['display_value'] == '') {
+      //     console.log(tempFormGroup, conservationEfforts['id']);
+      //     // alert()
+      //     tempFormGroup[conservationEfforts['id']].addValidators(Validators.required)
+      //     tempFormGroup[conservationEfforts['id']].updateValueAndValidity();
+      //   }
+      // }
     });
 
 
@@ -1230,7 +1587,7 @@ export class MapsFieldsComponent implements OnInit {
 
     // this.reportsForm = new FormGroup(tempFormGroup);
     console.log(this.reportsForm);
-
+    console.log(this.reportsForm.controls[this.documentType]['controls']['EVI51XZpu-']);
     //check if profile details KV match with these if the do take the value from the valueKeys thing and also calculate bounding boxes and add that as a new attribute.
 
     //Collect all SE data

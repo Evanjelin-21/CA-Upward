@@ -1,5 +1,5 @@
 
-<div #firstDiv class="col-6" style="float: right;"> <!--card p-2 m-2 -->
+<div [hidden]="caseClosed" #firstDiv class="col-6" style="float: right;"> <!--card p-2 m-2 -->
     <div>
         <div class="card m-2">
             <!-- <form [formGroup]="mappingForm" class="card-body"> -->
@@ -8,7 +8,7 @@
                     <button class="form-control" style="background-color: #104f7d; color: white" (click)="completeForm()">Complete</button>
                 </div>
                 <div class="col-1-sm mb-3" style="float: right;"> <!--card p-2 m-2 -->
-                    <button class="form-control" style="background-color: #104f7d; color: white" (click)="saveForm()">Save</button>
+                    <button class="form-control" style="background-color: #104f7d; color: white" (click)="completeForm(true)">Save</button>
                 </div>
                 <div class="col-1-sm mb-3" style="float: right;"> <!--card p-2 m-2 -->
                     <button class="form-control" style="background-color: #104f7d; color: white" (click)="cancel()">Cancel</button>
@@ -23,12 +23,12 @@
                 </div>
             </div>
 
-            <app-maps-fields  (documentTypeEvent)="addDocumentType($event)" [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
+            <app-maps-fields [isCaseClosed]="caseClosed" (closeCaseEvent)="closeCase()" (documentTypeEvent)="addDocumentType($event)" [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
         </div>
     </div>
 </div>
 
-<div  class="col-6" style="float: left; height: 100%; min-height: 100%;" [style.height.px]="firstDiv.offsetHeight">
+<div [hidden]="caseClosed" class="col-6" style="float: left; height: 100%; min-height: 100%;" [style.height.px]="firstDiv.offsetHeight">
     <div id="ithParent" class="col-12 h-100 fluid">
         <!-- <div class="help-attr row"><a href="https://in-ith-web.s3.us-east-2.amazonaws.com/help-docoperations.html" target="_blank">Help</a></div> -->
         <!--Parent container to host the client-->
@@ -46,13 +46,17 @@
     <div id="freezeLayer" class="freeze-layer" style="display:none;"></div>
     <!--Spinner-->
     <div id="spin" class="spin"></div>
-    <!--Confirm dialog box to get user conformation to upload or update version-->
-    <!-- <div id="dialogCont" class="dlg-container">
-        <div class="dlg-header">Are you sure?</div>
-        <div id="dlgBody" class="dlg-body">Do you want to continue?</div>
-        <div class="dlg-footer">
-            <a id="action-button" onclick="SplitConfirm.okay();">Ok</a>
-            <a id="cancel-button" onclick="SplitConfirm.close();">Cancel</a>
-        </div>
-    </div> -->
+</div>
+
+<div *ngIf="caseClosed" class="container fluid w-100 h-100"
+    style="display: flex; justify-content: center; align-items: center;">
+    
+    <mat-card style="min-height: 300px; min-width: 300px;" class="example-card d-grid">
+        <mat-card-title-group style="justify-content: center;">
+            <mat-card-title style="text-align: center">Note</mat-card-title>
+        </mat-card-title-group>
+        <mat-card-content>
+            The indexing has been completed and the case has been closed. Please open a new one.
+        </mat-card-content>
+    </mat-card>
 </div>

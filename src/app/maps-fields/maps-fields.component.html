@@ -1,4 +1,4 @@
-<div [hidden]="selectedDoc === ''" class="card p-2 text-responsive"> <!--m-2-->
+<div [hidden]="selectedDoc === '' || isProcessing" class="card p-2 text-responsive"> <!--m-2-->
     <div class="card-body "> <!--m-2-->
         <div class="container-fluid m-0 p-0">
         
@@ -15,14 +15,16 @@
                         <div #elementsList class="row fluid">
                             <div *ngFor="let field of reportsOfLicenseFiltered | filterPipe:section" style="align-self:center" [formGroupName]="documentType"  [class]="field['columns'] == 1 ? 'col-md-12': field['columns'] == 3 ? 'col-md-4': field['columns'] == 4 ? 'col-md-3':'col-md-6'">
                                 <!--col-xl-6-->
+                                <label *ngIf="reportsForm.get(documentType).get(field['id']).invalid" for="field['id']" style="color: red;">This field is required</label>
                                 <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
+                                    
                                     <div (click)="onClickInInput(field)" class="input-group-prepend max-width-labels">
                                         <span [attr.for]="field['id']"
-                                            class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
+                                            class="input-group-text form-label-105 w-100 wrap-text-labels">{{reportsForm.get(documentType).get(field['id']).invalid ? field['display_label'] + ' *':field['display_label']}}</span>
                                     </div>
                                     <input (click)="onClickInInput(field)"
-                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
-                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" class="form-control"
+                                        [title]="reportsForm.get(documentType).get(field['id']).hasError('required') ? 'This field is required' : (field['display_value'] != '' && field['display_value'] != undefined && field['display_value'] != null) &&  field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': (field['display_value'] != '' && field['display_value'] != undefined && field['display_value'] != null) && field['confidence'] < 50 || reportsForm.get(documentType).get(field['id']).invalid ? '1px solid red' : ''}" class="form-control"
                                         [id]="field['id']" [formControlName]="field['id']">
                                 </div>
                         
@@ -35,6 +37,7 @@
                                         [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
                                         [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" type="number"
                                         class="form-control" id="confidenceLevel" name="confidenceLevel">
+                                   
                                 </div>
                         
                                 <div *ngIf="field['fieldType']==='checkbox'" class="input-group-sm mb-3 input-group" style>
@@ -42,15 +45,15 @@
                                         <span [attr.for]="field['id']"
                                             class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
                                     </div>
-                                    <div (click)="onClickInInput(field)" class="input-group-prepend"
+                                    <div class="input-group-prepend"
                                         style="flex-grow: 1; display: flex; align-items: center; margin-left: 10px;">
                                         <input class="form-check-input position-static"
+                                            (change)="onCheckboxChange(field, documentType, $event)" 
                                             [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
                                             [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" [id]="field['id']"
                                             [formControlName]="field['id']" style="width: 20px; margin-top: 0; height: 20px;" type="checkbox"
                                             [value]="field['display_value']">
                                     </div>
-                                    
                                 </div>
                             </div>                            
                         </div>
@@ -110,15 +113,18 @@
                         <div #elementsList class="row fluid">
                             <div *ngFor="let field of reportsOfLicenseFiltered" style="align-self:center" [formGroupName]="documentType" class="col-md-6">
                                 <!--col-xl-6-->
+ 
                                 <div *ngIf="field['fieldType']==='text'" class="input-group-sm mb-3 input-group">
                                     <div (click)="onClickInInput(field)" class="input-group-prepend max-width-labels">
                                         <span [attr.for]="field['id']"
                                             class="input-group-text form-label-105 w-100 wrap-text-labels">{{field['display_label']}}</span>
                                     </div>
                                     <input (click)="onClickInInput(field)"
-                                        [title]="field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
-                                        [ngStyle]="{'border': field['confidence'] < 50 ? '1px solid red' : ''}" class="form-control"
+                                        [title]="(field['display_value'] != '' || field['display_value'] != undefined) && field['confidence'] < 50 ? 'Confidence Level is less than 50%' : ''"
+                                        [ngStyle]="{'border': (field['display_value'] != '' && field['display_value'] != undefined && field['display_value'] != null) && field['confidence'] < 50 ? '1px solid red' : ''}" class="form-control"
                                         [id]="field['id']" [formControlName]="field['id']">
+
+                                        
                                 </div>
                         
                                 <div *ngIf="field['fieldType']==='Numeric'" class="input-group-sm mb-3 input-group">
@@ -187,5 +193,36 @@
                 </form>
             </div>
         </div>
+    </div>
+
+    <ng-template #popupDialog let-data>
+        <div class="card mt-3">
+            <div class="card-body" style="text-align: center;">
+                {{popupMessage}}
+                <div>
+                    <button *ngIf="!popupMessage.includes('Saved Successfully') || !popupMessage.includes('Error saving')" style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" (click)="popupMessage.includes('Are you sure you want to save') ? completeForm(data.save) : popupMessage.includes('Are you sure you want to complete') ? completeForm(data.save) : resetTable(data)" mat-raised-button>Confirm</button>
+                    <button style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" (click)="popupMessage.includes('You are about to clear the table') ? resetTable(data, true) : null" mat-raised-button>{{!popupMessage.includes('Saved Successfully') && !popupMessage.includes('Error saving') ? 'Cancel' : 'Okay'}}</button>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- <ng-template #savePopup let-data>
+        <div class="card mt-3">
+            <div class="card-body" style="text-align: center;">
+                Are you sure you want to save the indexing data?
+                <div>
+                    <button mat-dialog-close class="closeButton float-right m-2" (click)="resetTable(data)" mat-raised-button>Confirm</button>
+                    <button mat-dialog-close class="closeButton float-right m-2" (click)="resetTable(data, true)" mat-raised-button>Cancel</button>
+                </div>
+            </div>
+        </div>
+    </ng-template> -->
+ 
+
+</div>
+<div *ngIf="isProcessing" class="card p-2 d-flex" style="align-items: center; justify-content: center;">
+    <div class="spinner-border text-primary" role="status">
+        
     </div>
 </div>

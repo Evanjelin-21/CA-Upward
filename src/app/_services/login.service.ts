@@ -14,4 +14,9 @@ export class loginService {
         return this.http.post<any>(url, {"username": "admin", "password": "Deloitte#1"})
             .pipe();
     }
+
+    public getUserToken() {
+        let token = localStorage.getItem("token")
+        return token
+    }
 }

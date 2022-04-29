@@ -44,6 +44,7 @@ export class HomeComponent implements OnInit {
   selectedTable = '';
   shouldDisplayForm = false;
   documentType = null;
+  caseClosed = false;
   constructor(
     private loginSvc:loginService,
     private route: ActivatedRoute,
@@ -51,6 +52,10 @@ export class HomeComponent implements OnInit {
     private cookieService: CookieService,
     private fb: FormBuilder
   ) { }
+
+  closeCase() {
+    this.caseClosed = true;
+  }
 
   async ngOnInit() {
     this.route.queryParams
@@ -70,11 +75,14 @@ export class HomeComponent implements OnInit {
     }
 
 
-    if(this.json && this.json['token']) {
-      new startExec(this.vaultDocId, this.json['token']);
-    } else {
-      new startExec(this.vaultDocId, null);
+    if(!this.caseClosed) {
+      if(this.json && this.json['token']) {
+        new startExec(this.vaultDocId, this.json['token']);
+      } else {
+        new startExec(this.vaultDocId, null);
+      }
     }
+   
 
     // if(this.reportsForm != undefined) {
     //   this.reportsForm.reset();
@@ -487,8 +495,9 @@ export class HomeComponent implements OnInit {
     console.log(retArray);
   }
 
-  completeForm() {
-    this.child.completeForm()
+  completeForm(save = false) {
+    this.child.openCompletePopup(save);
+    //this.child.completeForm(save)
   }
 
   transpose (matrix) {
