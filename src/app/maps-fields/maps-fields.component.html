@@ -200,24 +200,12 @@
             <div class="card-body" style="text-align: center;">
                 {{popupMessage}}
                 <div>
-                    <button *ngIf="!popupMessage.includes('Saved Successfully') || !popupMessage.includes('Error saving')" style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" (click)="popupMessage.includes('Are you sure you want to save') ? completeForm(data.save) : popupMessage.includes('Are you sure you want to complete') ? completeForm(data.save) : resetTable(data)" mat-raised-button>Confirm</button>
+                    <button *ngIf="!popupMessage.includes('Saved Successfully') && !popupMessage.includes('Error saving')" style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" (click)="popupMessage.includes('Are you sure you want to save') ? completeForm(data.save) : popupMessage.includes('Are you sure you want to complete') ? completeForm(data.save) : resetTable(data)" mat-raised-button>Confirm</button>
                     <button style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" (click)="popupMessage.includes('You are about to clear the table') ? resetTable(data, true) : null" mat-raised-button>{{!popupMessage.includes('Saved Successfully') && !popupMessage.includes('Error saving') ? 'Cancel' : 'Okay'}}</button>
                 </div>
             </div>
         </div>
     </ng-template>
-
-    <!-- <ng-template #savePopup let-data>
-        <div class="card mt-3">
-            <div class="card-body" style="text-align: center;">
-                Are you sure you want to save the indexing data?
-                <div>
-                    <button mat-dialog-close class="closeButton float-right m-2" (click)="resetTable(data)" mat-raised-button>Confirm</button>
-                    <button mat-dialog-close class="closeButton float-right m-2" (click)="resetTable(data, true)" mat-raised-button>Cancel</button>
-                </div>
-            </div>
-        </div>
-    </ng-template> -->
  
 
 </div>

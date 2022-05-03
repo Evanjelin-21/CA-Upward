@@ -56,10 +56,4 @@ export class DocumentService {
     return this.http.post(url, body)
         .pipe();
   }
-
-  salesforceCaseCloseCall(body) {
-    var url = this.config.getConfig('salesforceCaseUpdateUrl');
-    return this.http.put(url, body)
-        .pipe();
-  }
 }

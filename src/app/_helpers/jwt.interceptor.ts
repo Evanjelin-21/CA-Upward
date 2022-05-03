@@ -45,10 +45,24 @@ export class JwtInterceptor implements HttpInterceptor {
         return next.handle(request).pipe(catchError(async err => {
             if (err instanceof HttpErrorResponse && err.status === 401) {
                 console.error(err)
-                localStorage.removeItem('token');
-                console.log('Reload the page');
+                if(!localStorage.getItem('token')) {
+                    let json = await this.loginSvc.login().toPromise();
+        
+                    if(json['token']) {
+                      localStorage.setItem('token', json['token']);
+                      window.location.reload()
+                    }
+                }
             } else if (err instanceof HttpErrorResponse && err.status === 500 && err.error.message.includes("Authorization token is not valid")) { 
                 localStorage.removeItem('token');
+                if(!localStorage.getItem('token')) {
+                    let json = await this.loginSvc.login().toPromise();
+        
+                    if(json['token']) {
+                      localStorage.setItem('token', json['token']);
+                      window.location.reload()
+                    }
+                }
                 console.error(err)
             }
             return Observable.throw(err);

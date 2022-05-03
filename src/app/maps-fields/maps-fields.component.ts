@@ -59,6 +59,7 @@ export class MapsFieldsComponent implements OnInit {
   @Input() selectedDoc = 'Maps';
   @Input() vaultDocId = '';
   @Input() isCaseClosed = false;
+  @Output() buttonsDisableEvent = new EventEmitter<boolean>();
   @ViewChild('popupDialog', { static: false } ) popupDialog: TemplateRef<any>;
   constructor(
     private docService: DocumentService,
@@ -105,7 +106,6 @@ export class MapsFieldsComponent implements OnInit {
               "textLabel": this.tabsList[0]
             }
           })
-  
         } catch (err) {
           console.log(err);
         } finally {
@@ -187,9 +187,11 @@ export class MapsFieldsComponent implements OnInit {
   
   }
 
+  
+
   onCheckboxChange(field, documentType, event) {
     if(event && field['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?')) {
-      alert()
+      //alert()
       let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
       if(event.target.checked) {
         let val = this.reportsForm.get(documentType).get(conservationEfforts['id']).value
@@ -348,13 +350,14 @@ export class MapsFieldsComponent implements OnInit {
       this.popupMessage = 'Are you sure you want to save the indexing data?'
       this.dialog.open(this.popupDialog, {width: '500px', data: {save: save} })
     } else {
-      this.popupMessage = 'Are you sure you want to complete the indexing process? Note: This case will be closed and won\'t be available for editing.'
+      this.popupMessage = 'Are you sure you want to complete the indexing process? Note: This case will be closed'
       this.dialog.open(this.popupDialog, {width: '500px', data: {save: save} })
     }
   }
 
   async completeForm(save?) {
     this.isProcessing = true;
+    this.buttonsDisableEvent.emit(true);
     let applicationID;
     let allresults: any = [];
     try {
@@ -610,26 +613,22 @@ export class MapsFieldsComponent implements OnInit {
 
       this.isProcessing = false;
       if (save && updateMetadataResp.toString().toLowerCase() === 'success') {
-        this.popupMessage = 'Case Saved Successfully. You may return to this screen later to continue indexing.'
+        this.popupMessage = 'Case Saved Successfully.'
         this.dialog.open(this.popupDialog, { width: '500px' })
       } else if (save && updateMetadataResp.toString().toLowerCase() != 'success') {
         this.popupMessage = 'Error saving indexing data.'
         this.dialog.open(this.popupDialog, { width: '500px' })
       }
 
-      console.log(this.staticLicenseReportsJson);
-      if (!save && updateMetadataResp.toString().toLowerCase() === 'success' && updateJsonToCsv) {
-        let salesforceRes = await this.docService.salesforceCaseCloseCall({
-          "caseId": this.licenseReportsProperties['Case ID']
-        })
-        if(salesforceRes.toString().includes('Updated Succesfully'))
-          this.closeCaseEvent.emit();
+      
+      if(!save) {
+        this.closeCaseEvent.emit();
       }
-
     } catch (err) {
       console.log(err);
     } finally {
       this.isProcessing = false;
+      this.buttonsDisableEvent.emit(false);
     }
   }
 
@@ -1391,7 +1390,7 @@ export class MapsFieldsComponent implements OnInit {
           if(this.profileId === 9) {
             temp['tab'] = 'Page ' + temp['page'];
             if(!temp['page']) {
-              alert()
+              //alert()
             }
           }
             
