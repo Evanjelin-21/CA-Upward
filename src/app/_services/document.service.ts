@@ -56,4 +56,21 @@ export class DocumentService {
     return this.http.post(url, body)
         .pipe();
   }
+
+  uploadDocumentFromImagetrustToVault(body) {
+    let token = this.loginService.getUserToken()
+    let bearerToken = "Bearer " + token
+    const header = {
+      "Authorization": bearerToken
+    }
+
+    let bodyData = new FormData();
+    bodyData.append("file", body.file);
+    bodyData.append("title",  body.title);
+    bodyData.append("category_id", body.category_id);
+    bodyData.append("meta_data", JSON.stringify(body.meta_data));
+    var url = this.config.getConfig('uploadDocUrl');
+    return this.http.post(url, bodyData, {headers: header})
+        .pipe();
+  }
 }

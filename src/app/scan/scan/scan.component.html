@@ -1,0 +1,43 @@
+<div class="col-12" style="float: left; height: 100%; min-height: 100%;">
+    <div id="header">
+        <div class="row" style="margin-left: 0px; margin-right: 0px; justify-content: right;">                
+            <!-- <button class="button col-4" id="upload-version" onclick="uploadAsVersionHandlerForScan()">Complete</button>
+            <button class="button col-4" id="save-document" onclick="saveHandlerForScan()">Save</button>
+            <button class="button col-4" id="cancel-redact" onclick="cancelHandlerForScan()">Cancel</button> -->
+            
+            <button class="form-control" style="background-color: #104f7d; color: white; width: 16.66666667%;" onclick="saveHandlerForScan()">Submit</button>
+            <button  class="form-control" style="background-color: #104f7d; color: white; width: 16.66666667%;" onclick="closeWindowForScan()">Cancel</button>
+            
+            
+ 
+        </div>
+    </div>
+    
+    <div id="ithParent" class="col-12 h-100 fluid">
+        <!-- <div class="help-attr row"><a href="https://in-ith-web.s3.us-east-2.amazonaws.com/help-docoperations.html" target="_blank">Help</a></div> -->
+        <!--Parent container to host the client-->
+        <div id="imageTrustDiv">
+        </div>
+        
+    </div>
+
+    <!--Div to display Error-->
+    <div id="ithError">
+        <div id="msg"></div>
+        <button class="button" style="float: none;" id="close-window" onclick="closeWindow()">Close</button>
+    </div>
+    <!--Div to freeze the surrounding the confirm dialog-->
+    <div id="freezeLayer" class="freeze-layer" style="display:none;"></div>
+    <!--Spinner-->
+    <div id="spin" class="spin" style="display: none !important;"></div>
+    <div id="dialogCont" class="dlg-container">
+        <div class="dlg-header">Are you sure?</div>
+        <div id="dlgBody" class="dlg-body">Do you want to continue?</div>
+        <div class="dlg-footer">
+            <a id="action-button" onclick="SplitConfirm.okay();">Ok</a>
+            <a id="cancel-button" onclick="SplitConfirm.close();">Cancel</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</div>

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { HostListener, Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject, observable } from 'rxjs';
 import { switchMap, catchError, first } from 'rxjs/operators';
@@ -11,6 +11,21 @@ import { loginService } from '../_services/login.service';
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
     //captureUrl: string = null;
+    @HostListener('window:message', ['$event'])
+    async OnDocumentSentForUpload(event: any) {
+        console.log(event.data);
+        if(typeof(event.data) == 'string' && event.data == 'reload') {
+            localStorage.removeItem('token');
+            if(!localStorage.getItem('token')) {
+                let json = await this.loginSvc.login().toPromise();
+    
+                if(json['token']) {
+                  localStorage.setItem('token', json['token']);
+                  window.location.reload()
+                }
+            }
+        }
+    }
     constructor(
         // private authenticationService: AuthenticationService,
         // private alertService: AlertService,

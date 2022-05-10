@@ -1,10 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
+import { ScanComponent } from './scan/scan/scan.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   {path: 'home', component: HomeComponent},
+  {path: 'scan', component: ScanComponent},
   { path: '**', redirectTo: 'home' }
 ];
 

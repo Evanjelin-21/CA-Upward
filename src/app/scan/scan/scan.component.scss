@@ -1,0 +1,290 @@
+div#hostappHeaderContent > div {
+    display: inline-block;
+  }
+  
+  body.dragoverlay-documentview,
+  body.dragoverlay-folderview {
+    background-color: #4fcb29;
+  }
+  
+  .itw-search-results-container .itw-matches-pane {
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+  
+  .itw-search-results-header {
+    padding: .5rem;
+  }
+  
+  div#tabbedSearchPanels {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    padding: 0.5em;
+    box-sizing: border-box;
+  }
+  
+  div#tabbedSearchPanels > .pii-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background-color: white;
+    width: 100%;
+    height: 100%;
+    padding: 0.5em;
+    box-sizing: border-box;
+  }
+  
+  div#tabbedSearchPanels > .tab-panel {
+    display: flex;
+  }
+  
+  div#tabbedSearchPanels > .tab-panel.hidden {
+    display: none;
+  }
+  
+  .tab-strip {
+    height: 30px;
+    display: flex;
+    justify-content: stretch;
+    overflow: visible;
+    border-bottom: 1px solid #7fb7df;
+  }
+  
+  .tab-strip > .tab {
+    flex: 0 1 auto;
+    text-align: center;
+    border-top: 1px solid rgba(0, 0, 0, 0.25);
+    border-left: 1px solid rgba(0, 0, 0, 0.25);
+    min-width: 5em;
+    line-height: 2.5;
+    cursor: pointer;
+    color: #00528d;
+    background-color: #bcd8ec;
+    border-bottom: 1px solid white;
+    height: 100%;
+  }
+  
+  .tab-strip > .tab.active {
+    border-color: #7fb7df;
+    border-bottom-color: rgb(127, 183, 223);
+    background-color: white;
+    border-bottom-color: white;
+  }
+  
+  .tab-strip > .tab:first-child {
+    border-top-left-radius: 5px;
+  }
+  
+  .tab-strip > .tab:last-child {
+    border-top-right-radius: 5px;
+    border-right: 1px solid rgba(0, 0, 0, 0.25);
+  }
+  .itw-match-snippet-renderer .itw-search-result-text {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .itw-match-snippet-renderer .page-number {
+    font-size: smaller;
+    color: #999;
+    flex: 1 0 100%;
+  }
+  
+  .itw-match-snippet-renderer.itw-disabled {
+    opacity: 0.5;
+    text-decoration:line-through;
+  }
+  .itw-match-snippet-renderer.itw-disabled .itw-checkbox {
+    pointer-events: none;
+  }
+  
+  .itw-search-results-container .itw-match-snippet-renderer.itw-filtered-out {
+    display: none;
+  }
+  
+
+
+  .Tabletitle {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 12pt;
+    background-color: rgb(235, 233, 233);
+    //color: white;
+    font-weight: 500;
+    //height: 3em;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1px;
+}
+
+.element-filter {
+    //float: right;
+    margin-left: 0.5em;
+    width: 70%;
+}
+.mat-raised-button {
+    color: white;
+    background-color: rgb(110, 192, 27);
+}
+
+.actionButton {
+    float: right;
+    background-color: rgb(110, 192, 27);
+    border: black;
+    color: white;
+}
+
+.backButton {
+    float: right;
+    background-color: black;
+    color: white;
+}
+
+.backButtonColor {
+    background-color: black;
+    color: white;
+}
+
+.actionButtonColor {
+    background-color: rgb(110, 192, 27);
+    color: white;
+}
+
+
+.clone-icon {
+    transform: scale(.75);
+    vertical-align: middle;
+}
+
+.mat-icon {
+    cursor: pointer;
+}
+
+.invalid {
+    border: 1px solid red;
+}
+
+.input-group-text {
+    font-size: inherit;
+}
+
+
+
+//CSS for Imagetrust
+/*CSS for Error Messages*/
+
+#ithError {
+    margin-top: 10px;
+    font-size: large;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* Hides the sidebar with batch hierarchy */
+
+#ithParent>div>div.itw-main-panel>div.itw-center-panel>div.itw-panel.itw-bep-panel.itw-resizable {
+    display: none;
+}
+
+
+/*Spinner CSS*/
+
+@keyframes spinner {
+    0% {
+        transform: translate3d(-50%, -50%, 0) rotate(0deg);
+    }
+
+    100% {
+        transform: translate3d(-50%, -50%, 0) rotate(360deg);
+    }
+}
+
+.help-attr {
+    float: right;
+    position: relative;
+    top: 30px;
+}
+
+.spin::before {
+    animation: 1.5s linear infinite spinner;
+    animation-play-state: inherit;
+    border: solid 5px #cfd0d1;
+    border-bottom-color: #1c87c9;
+    border-radius: 50%;
+    content: "";
+    height: 40px;
+    width: 40px;
+    position: absolute;
+    top: 50%;
+    left: 25%;
+    transform: translate3d(-50%, -50%, 0);
+    will-change: transform;
+    z-index: 2;
+}
+
+
+body {
+    font-family: 'Arial';
+}
+
+.dlg-container {
+    position: absolute;
+    left: 50%;
+    top: -30%;
+    transform: translateX(-50%) translateY(-50%);
+    width: 400px;
+    background: #fff;
+    padding: 10px;
+    border: 2px solid #ddd;
+    box-shadow: 1px 1px 5px 1px #ccc;
+    border-radius: 10px;
+    opacity: 0;
+    transition: all 0.3s linear 0s;
+    z-index: 2;
+}
+
+.dlg-header {
+    padding: 10px;
+    font-weight: bold;
+    background: #0070c0;
+    color: #f6f7f8;
+}
+
+.dlg-body {
+    padding: 10px;
+    line-height: 30px;
+}
+
+.dlg-footer {
+    text-align: center;
+    background: #f5f5f2;
+    padding: 3px 0;
+}
+
+.dlg-footer a {
+    display: inline-block;
+    width: 100px;
+    padding: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: #eee;
+    cursor: pointer;
+}
+
+.dlg-footer a:active {
+    box-shadow: inset 2px 2px 4px 0 #ccc;
+    color: #666;
+}
+
+.freeze-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
