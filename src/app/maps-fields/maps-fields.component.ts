@@ -332,13 +332,20 @@ export class MapsFieldsComponent implements OnInit {
           for(let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++ ) {
             let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
             let eleKeys = Object.keys(ele);
-            ele[eleKeys[0]]['final_display_value'] = false;
+            if(eleKeys.length > 0) {
+              console.log(ele, eleKeys, this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]])
+              ele[eleKeys[0]]['final_display_value'] = false;
+            }
+            
           }
         } else if(keys[j] === 'TE') {
           for(let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
             let ele =  this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
             let eleKeys = Object.keys(ele);
-            ele[eleKeys[0]]['final_display_value'] = cloneDeep(ele[eleKeys[0]][1]);
+            if(eleKeys.length > 0) {
+              ele[eleKeys[0]]['final_display_value'] = cloneDeep(ele[eleKeys[0]][1]);
+            }
+            
           }
         }
       }
@@ -473,7 +480,7 @@ export class MapsFieldsComponent implements OnInit {
               let SEKeys = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]]
               this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
                 let eleKeys = Object.keys(ele)
-                if (ele[eleKeys[0]]['display_label'] === tempAllResultsByPageSE[k]['display_label']) {
+                if (eleKeys.length > 0 && ele[eleKeys[0]]['display_label'] === tempAllResultsByPageSE[k]['display_label']) {
                   if (tempAllResultsByPageSE[k]['final_display_value'])
                     ele[eleKeys[0]]['final_display_value'] = tempAllResultsByPageSE[k]['final_display_value'];
 
@@ -509,7 +516,7 @@ export class MapsFieldsComponent implements OnInit {
                   }
                   this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
                     let eleKeys = Object.keys(ele);
-                    if (ele[eleKeys[0]]['display_label'] === tempTable['display_label']) {
+                    if (eleKeys.length > 0 && ele[eleKeys[0]]['display_label'] === tempTable['display_label']) {
                       if (tempTable['display_value'])
                         ele[eleKeys[0]]['final_display_value'] = tempTable['display_value'];
                       if (save) {
@@ -552,7 +559,7 @@ export class MapsFieldsComponent implements OnInit {
             for (let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
               let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
               let eleKeys = Object.keys(ele);
-              if (ele[eleKeys[0]]['final_display_value'] == undefined) {
+              if (eleKeys.length > 0 && ele[eleKeys[0]]['final_display_value'] == undefined) {
                 ele[eleKeys[0]]['final_display_value'] = false;
 
                 if (save) {
@@ -587,27 +594,7 @@ export class MapsFieldsComponent implements OnInit {
         }
         updateJsonToCsv = await this.docService.convertFromJsonToCsv(jsonToCsvBody).toPromise();
         console.log(updateJsonToCsv)
-        let urlResp = await this.docService.getDocumentPresignedUrl(this.staticLicenseReportsJson['vault_doc_id']).toPromise()
-        urlResp = urlResp.split(' ')[1];
-        console.log(urlResp);
-
-        let imgUrl = this.config.getConfig('imageUrl') + this.staticLicenseReportsJson['vault_doc_id'];
-        let docType = "Report Of Licensee";
-        if (this.profileId == 11) {
-          docType = "Progress Report by Permittee"
-        } else if (this.profileId == 10) {
-          docType = "License For Diversions"
-        } else if (this.profileId == 9) {
-          docType = "Application to Appropriate Unappropriated Water"
-        }
-        let complianceData = {
-          "vault_id": this.staticLicenseReportsJson['vault_doc_id'],
-          "applicationId": applicationID,
-          "pdfURL": urlResp,
-          "salesforceImageURL": imgUrl,
-          "docType": docType
-        }
-        await this.docService.compliancePostCall(complianceData).toPromise();
+        
         this.isProcessing = false;
       }
 
@@ -1112,7 +1099,7 @@ export class MapsFieldsComponent implements OnInit {
             docWidth = tempV['doc_width'];
             docHeight = tempV['doc_height'];
             if(values[valueKeys[i]]['KV'][j]['display_label'].includes('Use Net Acreage')) {
-//IMPORTANT CONSOLE LOGS              
+          //IMPORTANT CONSOLE LOGS              
               console.log( values[valueKeys[i]]['KV'][j]['display_value'], values[valueKeys[i]]['KV'][j])
             }
             //values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
