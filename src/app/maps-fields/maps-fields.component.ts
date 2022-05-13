@@ -574,14 +574,12 @@ export class MapsFieldsComponent implements OnInit {
         }
       }
 
-
+      let updatedMetadataProperties =  {...this.licenseReportsProperties};
+      updatedMetadataProperties['Extracted Json'] = this.staticLicenseReportsJson
       let updateMetadataBody = {
         docId: this.staticLicenseReportsJson['vault_doc_id'],
         category_id: 1,
-        properties: {
-          "Case ID": this.licenseReportsProperties['Case ID'],
-          "Extracted Json": this.staticLicenseReportsJson
-        }
+        properties: updatedMetadataProperties
       }
       console.log(updateMetadataBody);
       const updateMetadataResp = await this.docService.updateMetadata(updateMetadataBody).toPromise();

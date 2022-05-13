@@ -90,6 +90,7 @@ var customSizeButton = null;
 var fitToPageButton = null;
 
 var coordinatesToAnnotate = null;
+var responsesArr = [];
 /** @type {ITCDispatch}
  *
  * Will hold the created instance of the Transactional Client and its API.
@@ -528,7 +529,7 @@ function uploadAsVersionForScan() {
          * Please view the example hosting webserver's implementation of the `saveAsPdf`
          * endpoint for further information.
          */
-function uploadAsNewForScan() {
+async function uploadAsNewForScan() {
   var docUuids = []
   var docNames = []
   var documentsCount = ithInstance.currentBatch.documents.length
@@ -543,6 +544,7 @@ function uploadAsNewForScan() {
   })
   console.log(documentDetails, ithInstance.currentBatch.documents, docUuids, docNames);
   var progressModal = ithInstance.indeterminateProgress("Generating document...", "Document generation");
+  responsesArr = [];
   for (let index = 0; index < ithInstance.currentBatch.documents.length; index++) {
     const element = ithInstance.currentBatch.documents[index];
     var responsePromise = ithInstance.downloadAsMultiDoc(element, "pdf",
@@ -557,8 +559,21 @@ function uploadAsNewForScan() {
     });
    
     console.log(annotatedFile)
-    await sendDocForUploadToVault(startExecToken, annotatedFile)
-    progressModal.closeFn();
+    try {
+      let tempPromise = await sendDocForUploadToVault(startExecToken, annotatedFile)
+      if(responsesArr.length > 0) {
+        progressModal.closeFn();
+        progressModal = ithInstance.inform("Document(s) Successfully uploaded", "Success");
+        progressModal.then((fulfilled) => {
+          window.localStorage.removeItem('token');
+          location.reload();
+        })
+      }
+    } catch (err) {
+      progressModal.closeFn();
+    }
+   
+    
     // uploadVersionToDocuedge(this.documentDetails.documentId, this.documentDetails.categoryId, (documentDetails['metadata']['properties']), false, annotatedFile)
     //     .then(function() {
     //         window.close()
@@ -1700,10 +1715,15 @@ async function sendDocForUploadToVault(token, file) {
     console.log("Response", data)
     if (response.status == 200) {
       resolve(data)
+      responsesArr.push(data);
     } else {
-      if(response.status == 500)
-        window.postMessage('Reload');
-      reject()
+      if(response.status == 500) {
+        reject();
+        window.localStorage.removeItem('token');
+        location.reload();
+      } else {
+        reject()
+      }      
     }
   })
 }
