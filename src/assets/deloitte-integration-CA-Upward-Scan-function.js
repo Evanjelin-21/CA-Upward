@@ -721,18 +721,29 @@ function getUserTokenForScan() {
   return currUser.token
 }
 
-function changeToFitPageForScan() {
-  if (customSizeButton === null) {
-    customSizeButton = document.getElementsByClassName('itw-button')[6];
+function handleCustomSizeButton(button) { 
+  console.log(button, " div was handled");
 
-    customSizeButton.dispatchEvent(new Event('mouseenter'));
-    console.log(customSizeButton);
-  };
-  if (fitToPageButton === null) {
-    fitToPageButton = document.getElementsByClassName('itw-controls');
-    console.log(fitToPageButton);
-    fitToPageButton.click();
-  };
+ 
+  button.dispatchEvent(new Event('mouseenter'));
+  let button2 = document.getElementById('fit-width')
+  button2.click();
+  button.dispatchEvent(new Event('mouseleave'));
+}
+
+function changeToFitPageForScan() {
+  const observer = new MutationObserver(function (mutations, mutationInstance) {
+    const customSizeButton = document.getElementById('custom-size');
+    if (customSizeButton) {
+        handleCustomSizeButton(customSizeButton);
+        mutationInstance.disconnect();
+    }
+  });
+
+  observer.observe(document, {
+    childList: true,
+    subtree:   true
+  });
   
 }
 
@@ -760,7 +771,7 @@ function transactionalClientCreatedForScan(dispatch) {
  //document.getElementsByClassName('itw-panel itw-bep-panel itw-resizable')[0].style.display = 'none'
   ithInstance = dispatch;
   window.ithInstanceNew = ithInstance;
-
+  performHtmlChangesForScan();
   //iframe.postMessage("client loaded", "*")
   // iframe.postMessage(ithInstance, "*")
   //iframe.postMessage(JSON.stringify(window), "*")
@@ -825,6 +836,23 @@ function initForScan() {
     // do the import of the demo PDF file using the appropriate Transactional Client API method
     //ithInstance.importDocument(ithInstance.currentBatch, demoPdfFilePath, "server-fs");
 
+  }
+}
+
+function performHtmlChangesForScan() { 
+  let imageTrustLogo = (document.getElementsByClassName('itw-watermark-logo'));
+  let itwTab = (document.getElementsByClassName('itw-tab'));
+  for(let i = 0; i < imageTrustLogo.length; i++) {
+    imageTrustLogo[i].style.display = "none"
+  }
+
+  for (let i = 0; i < itwTab.length; i++) {
+    if (itwTab[i] != undefined) {
+      itwTab[i].style['color'] = "#104f7d"
+    }
+    if (i == 1) {
+      itwTab[i].addEventListener('click', changeToFitPageForScan)
+    }
   }
 }
 

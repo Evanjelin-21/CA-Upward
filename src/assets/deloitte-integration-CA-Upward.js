@@ -831,7 +831,7 @@ function performHtmlChanges() {
   //Add three buttons to itw-end-side and remove logo
   console.log("inside performHtmlChanges")
   let itwEndSide = (document.getElementsByClassName('itw-end-side'))[0];
-  let imageTrustLogo = (document.getElementsByClassName('itw-watermark-logo'))[0];
+  let imageTrustLogo = (document.getElementsByClassName('itw-watermark-logo'));
   let itwMainToolbar = (document.getElementsByClassName('itw-main-toolbar'))[0];
   let itwIconMagnifyingGlass = (document.getElementsByClassName('itw-icon itw-icon-magnifying-glass'))[0];
   let itwTab = (document.getElementsByClassName('itw-tab'));
@@ -873,14 +873,18 @@ function performHtmlChanges() {
     console.log('itwQueue is undedefined', itwIconQueue)
   }
 
+  
+  // if (imageTrustLogo != undefined) {
+  //   imageTrustLogo.style.display = "none"
 
-  if (imageTrustLogo != undefined) {
-    imageTrustLogo.style.display = "none"
+  //   // imageTrustLogo.parentElement.innerHTML = child2 + imageTrustLogo.parentElement.innerHTML 
+  //   // imageTrustLogo.style['background-image'] = './Docuedge-logo.png'
+  // }
 
-    // imageTrustLogo.parentElement.innerHTML = child2 + imageTrustLogo.parentElement.innerHTML 
-    // imageTrustLogo.style['background-image'] = './Docuedge-logo.png'
+
+  for(let i = 0; i < imageTrustLogo.length; i++) {
+    imageTrustLogo[i].style.display = "none"
   }
-
 
 
   if (itwMainToolbar != undefined) {
