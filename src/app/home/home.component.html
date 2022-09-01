@@ -1,17 +1,23 @@
-
-<div [hidden]="caseClosed" #firstDiv class="col-6" style="float: right;"> <!--card p-2 m-2 -->
+<div [hidden]="caseClosed" #firstDiv class="col-6" style="float: right;">
+    <!--card p-2 m-2 -->
     <div>
         <div class="card m-2">
             <!-- <form [formGroup]="mappingForm" class="card-body"> -->
             <div class="card-body">
-                <div class="col-1-sm mb-3" style="float: right;"> <!--card p-2 m-2 -->
-                    <button [disabled]="disableButtons" class="form-control" style="background-color: #104f7d; color: white" (click)="completeForm()">Complete</button>
+                <div class="col-1-sm mb-3" style="float: right;">
+                    <!--card p-2 m-2 -->
+                    <button [disabled]="disableButtons" class="form-control"
+                        style="background-color: #104f7d; color: white" (click)="completeForm()">Complete</button>
                 </div>
-                <div class="col-1-sm mb-3" style="float: right;"> <!--card p-2 m-2 -->
-                    <button [disabled]="disableButtons" class="form-control" style="background-color: #104f7d; color: white" (click)="completeForm(true)">Save</button>
+                <div class="col-1-sm mb-3" style="float: right;">
+                    <!--card p-2 m-2 -->
+                    <button [disabled]="disableButtons" class="form-control"
+                        style="background-color: #104f7d; color: white" (click)="completeForm(true)">Save</button>
                 </div>
-                <div class="col-1-sm mb-3" style="float: right;"> <!--card p-2 m-2 -->
-                    <button [disabled]="disableButtons" class="form-control" style="background-color: #104f7d; color: white" (click)="cancel()">Cancel</button>
+                <div class="col-1-sm mb-3" style="float: right;">
+                    <!--card p-2 m-2 -->
+                    <button [disabled]="disableButtons" class="form-control"
+                        style="background-color: #104f7d; color: white" (click)="cancel()">Cancel</button>
                 </div>
                 <div class="input-group-sm mb-3 input-group col-12">
                     <div class="input-group-prepend">
@@ -23,34 +29,37 @@
                 </div>
             </div>
 
-            <app-maps-fields (buttonsDisableEvent)="disableAllButtons($event)" [isCaseClosed]="caseClosed" (closeCaseEvent)="closeCase()" (documentTypeEvent)="addDocumentType($event)" [vaultDocId]="vaultDocId" [selectedDoc]="selectedDocument"></app-maps-fields>
+            <app-maps-fields (buttonsDisableEvent)="disableAllButtons($event)" [isCaseClosed]="caseClosed"
+                (closeCaseEvent)="closeCase()" (documentTypeEvent)="addDocumentType($event)" [vaultDocId]="vaultDocId"
+                [selectedDoc]="selectedDocument"></app-maps-fields>
         </div>
     </div>
 </div>
 
-<div [hidden]="caseClosed" class="col-6" style="float: left; height: 100%; min-height: 100%;" [style.height.px]="firstDiv.offsetHeight">
+<div [hidden]="caseClosed" class="col-6" style="float: left; height: 100%; min-height: 100%;"
+    [style.height.px]="firstDiv.offsetHeight">
     <div id="ithParent" class="col-12 h-100 fluid">
-        <!-- <div class="help-attr row"><a href="https://in-ith-web.s3.us-east-2.amazonaws.com/help-docoperations.html" target="_blank">Help</a></div> -->
-        <!--Parent container to host the client-->
         <div id="imageTrustDiv">
         </div>
-        
-    </div>
 
-    <!--Div to display Error-->
+    </div>
     <div id="ithError">
         <div id="msg"></div>
         <button class="button" style="float: none;" id="close-window" onclick="closeWindow()">Close</button>
     </div>
-    <!--Div to freeze the surrounding the confirm dialog-->
     <div id="freezeLayer" class="freeze-layer" style="display:none;"></div>
-    <!--Spinner-->
     <div id="spin" class="spin"></div>
 </div>
 
+<!-- <div *ngIf="showDocument" class="col-6" style="float: left; height: 100%; min-height: 100%;">
+    <iframe title="Document" [src]="fileUrl | safe" width="100%" autosize
+              style="height: calc(100vh - 50px);">
+       </iframe> 
+</div> -->
+
 <div *ngIf="caseClosed" class="container fluid w-100 h-100"
     style="display: flex; justify-content: center; align-items: center;">
-    
+
     <mat-card style="min-height: 300px; min-width: 300px;" class="example-card d-grid">
         <mat-card-title-group style="justify-content: center;">
             <mat-card-title style="text-align: center">Note</mat-card-title>
@@ -66,7 +75,8 @@
         <div class="card-body" style="text-align: center;">
             {{popupMessage}}
             <div>
-                <button style="background-color: #104f7d; color: white" mat-dialog-close class="closeButton float-right m-2" mat-raised-button>Okay</button>
+                <button style="background-color: #104f7d; color: white" mat-dialog-close
+                    class="closeButton float-right m-2" mat-raised-button>Okay</button>
             </div>
         </div>
     </div>

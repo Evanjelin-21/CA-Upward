@@ -19,12 +19,12 @@ declare var clearAllHighlights: any;
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  @ViewChild(MapsFieldsComponent, {static : true}) child : MapsFieldsComponent;
+  @ViewChild(MapsFieldsComponent, { static: true }) child: MapsFieldsComponent;
   documentsList = ['Maps', 'LicenseReports', 'ProgressReport', 'DiversionLicense', 'AppropriateUnap']
   selectedDocument = 'LicenseReports';
   ithInstance = null;
-  vaultDocId= '';
-  json; 
+  vaultDocId = '';
+  json;
 
 
 
@@ -34,7 +34,7 @@ export class HomeComponent implements OnInit {
 
   licenseReportsJson: any = [];
 
-  reportsOfLicenseFields: any [];
+  reportsOfLicenseFields: any[];
   reportsForm: FormGroup;
   reportsOfLicenseFiltered: any = [];
   currentUseOfWaterTable: any = []
@@ -48,9 +48,12 @@ export class HomeComponent implements OnInit {
   caseClosed = false;
   popupMessage = '';
   disableButtons = false;
-  @ViewChild('saveDataError', { static: false } ) popupDialog: TemplateRef<any>;
+  fileUrl = ''
+  showDocument: boolean = false
+
+  @ViewChild('saveDataError', { static: false }) popupDialog: TemplateRef<any>;
   constructor(
-    private loginSvc:loginService,
+    private loginSvc: loginService,
     private route: ActivatedRoute,
     private docService: DocumentService,
     private cookieService: CookieService,
@@ -64,29 +67,35 @@ export class HomeComponent implements OnInit {
 
   async ngOnInit() {
     this.route.queryParams
-    .subscribe(params => {
-      console.log(params);
-      if(params['vaultDocId']) {
-        this.vaultDocId = params['vaultDocId'];
-      }
-    });
+      .subscribe(params => {
+        this.showDocument = false
+        console.log(params);
+        if (params['vaultDocId']) {
+          this.vaultDocId = params['vaultDocId'];
+          this.docService.getDocumentPresignedUrl(this.vaultDocId).subscribe(url => {
+            console.log(url)
+            this.fileUrl = url.slice(5)
+            this.showDocument = true
+          })
+        }
+      });
 
-    if(!localStorage.getItem('token')) {
+    if (!localStorage.getItem('token')) {
       this.json = await this.loginSvc.login().toPromise();
       console.log(this.json);
-      if(this.json['token']) {
+      if (this.json['token']) {
         localStorage.setItem('token', this.json['token']);
       }
     }
 
 
-    if(!this.caseClosed) {
-      if(this.json && this.json['token']) {
+    if (!this.caseClosed) {
+      if (this.json && this.json['token']) {
         new startExec(this.vaultDocId, this.json['token']);
       } else {
         new startExec(this.vaultDocId, null);
       }
-    } 
+    }
   }
 
   cancel() {
@@ -101,13 +110,13 @@ export class HomeComponent implements OnInit {
     this.documentType = type;
   }
 
-  
+
   completeForm(save = false) {
-    if(this.child.reportsForm.valid) {
+    if (this.child.reportsForm.valid) {
       this.child.openCompletePopup(save);
     } else {
-      this.popupMessage = save ? 'Please resolve all errors before saving the form' : 'Please resolve all errors before completing the form' 
-      this.dialog.open(this.popupDialog, {width: '500px'})
+      this.popupMessage = save ? 'Please resolve all errors before saving the form' : 'Please resolve all errors before completing the form'
+      this.dialog.open(this.popupDialog, { width: '500px' })
     }
   }
 

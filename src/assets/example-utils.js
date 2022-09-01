@@ -3,7 +3,7 @@ var ithExamplesConfig = {
   /**
    * The URL of the HTML Service. Default: the current URL running on port 8199
    */
-  srvBaseUrl: 'https://upwardimagetrust.deloitte.com/service-html/rest/v1.0/', //location.protocol + '//' + location.hostname + ':8199/service-html/rest/v1.0/',
+  srvBaseUrl: 'https://imagetrust-ext-867651136.us-east-2.elb.amazonaws.com:8199/service-html/rest/v1.0/', //location.protocol + '//' + location.hostname + ':8199/service-html/rest/v1.0/',
   //srvBaseUrl: location.protocol + '//' + location.hostname + ':' + location.port + '/service-html/rest/v1.0/',
   //srvBaseUrl: location.protocol + '//' + location.hostname + ':8199/service-html/rest/v1.0/',
   // LogToServer: true,

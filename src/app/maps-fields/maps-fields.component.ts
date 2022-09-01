@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DocumentService } from '../_services/document.service';
 import { CookieService } from 'ngx-cookie-service';
@@ -43,7 +43,7 @@ export class MapsFieldsComponent implements OnInit {
   shouldDisplayForm = false;
   sectionList = [];
   documentType = null;
-  profileId = null;
+  profileId = 1;
   tableSection = null;
   shouldAddSections = true;
   staticLicenseReportsJson = {};
@@ -56,12 +56,13 @@ export class MapsFieldsComponent implements OnInit {
   isProcessing = false;
   @Output() documentTypeEvent = new EventEmitter<string>();
   @Output() closeCaseEvent = new EventEmitter<void>();
-  @Input() selectedDoc = 'Maps';
+  @Input() selectedDoc = 'LicenseReports';
   @Input() vaultDocId = '';
   @Input() isCaseClosed = false;
   @Output() buttonsDisableEvent = new EventEmitter<boolean>();
   @ViewChild('popupDialog', { static: false } ) popupDialog: TemplateRef<any>;
   constructor(
+    private changeDetectorRef: ChangeDetectorRef,
     private docService: DocumentService,
     private cookieService: CookieService,
     private fb: FormBuilder,
@@ -80,15 +81,17 @@ export class MapsFieldsComponent implements OnInit {
 
       if (this.selectedDoc === 'LicenseReports') {
         try {
-
+          //console.log("\nVAULT DOC ID :: ",this.vaultDocId)
           this.licenseReportsProperties = (await this.docService.getExtractedJson(this.vaultDocId).toPromise())['metadata']['properties']
+          //console.log("licenseReportsProperties", this.licenseReportsProperties)
           this.licenseReportsJson = this.licenseReportsProperties['Extracted Json'];
           this.staticLicenseReportsJson = cloneDeep(this.licenseReportsJson);
-          this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
+          // this.profileDetails = (await this.docService.getProfileDetails(this.licenseReportsJson['profile_id']).toPromise())['profile_definition']['properties'];
+          this.profileDetails = this.docService.getProfileDetailsCoded()
           this.staticProfileDetailsJson = cloneDeep(this.profileDetails);
           //this.profileDetails = this.docService.getProfileDetails2();
           this.isProcessing = false;
-          console.log(this.profileDetails, this.licenseReportsJson);
+          //console.log(this.profileDetails, this.licenseReportsJson);
           this.documentType = this.licenseReportsJson['docType'];
           this.profileId = this.licenseReportsJson['profile_id'];
           this.documentTypeChanged(this.documentType);
@@ -107,12 +110,17 @@ export class MapsFieldsComponent implements OnInit {
             }
           })
         } catch (err) {
-          console.log(err);
+          //console.log(err);
         } finally {
           this.isProcessing = false;
         }
       }
     }
+  }
+
+  ngAfterContentChecked() {
+    //this.selectedRow = undefined
+    this.changeDetectorRef.detectChanges();
   }
 
   documentTypeChanged(value: string) {
@@ -128,10 +136,10 @@ export class MapsFieldsComponent implements OnInit {
     for(let i = 0; i < this.tableList.length; i++) {
       if(e.tab.textLabel.includes(this.tableList[i].tab)) {
         this.selectedTableNames.push(this.tableList[i].name);
-        console.log(this.selectedTableNames);
+        //console.log(this.selectedTableNames);
         this.tableSection = this.tableList[i].section;
         this.fullTableArray.push(this.tableList[i].full_table);
-        console.log(this.fullTableArray);
+        //console.log(this.fullTableArray);
         if(this.tableList[i].tab != 'Summary') {
           this.sectionList = this.tableList[i].sectionList ? this.tableList[i].sectionList : ['Main Section'];
           if(this.sectionList.length === 1 && this.sectionList[0] === 'Main Section') {
@@ -151,12 +159,13 @@ export class MapsFieldsComponent implements OnInit {
           }
           
         }
-        console.log(this.tableSection, this.tableList[i].section)
-        this.onClickInInput(this.tableList[i].full_table);
+        //console.log(this.tableSection, this.tableList[i].section)
+        // this.onClickInInput(this.tableList[i].full_table);
         //break;
         //TO DO: Need to give each table a name
       }
     }
+
     
     if(this.selectedTableNames.length === 0) {
       if(this.profileId === 8) {
@@ -184,7 +193,7 @@ export class MapsFieldsComponent implements OnInit {
     } else {
       new clearAllHighlights()
     }
-  
+    console.log(field)
   }
 
   
@@ -198,7 +207,7 @@ export class MapsFieldsComponent implements OnInit {
         if(val == undefined || val == null || val == '') {
           this.reportsForm.get(documentType).get(conservationEfforts['id']).addValidators(Validators.required)
           this.reportsForm.get(documentType).get(conservationEfforts['id']).updateValueAndValidity();
-          console.log(this.reportsForm.get(documentType).get(conservationEfforts['id']))
+          //console.log(this.reportsForm.get(documentType).get(conservationEfforts['id']))
         }
       } else {
         this.reportsForm.get(documentType).get(conservationEfforts['id']).clearValidators();
@@ -214,7 +223,7 @@ export class MapsFieldsComponent implements OnInit {
         if(val == undefined || val == null || val == '') {
           this.reportsForm.get(documentType).get(remarks['id']).addValidators(Validators.required)
           this.reportsForm.get(documentType).get(remarks['id']).updateValueAndValidity();
-          console.log(this.reportsForm.get(documentType).get(remarks['id']))
+          //console.log(this.reportsForm.get(documentType).get(remarks['id']))
         }
       } else {
         this.reportsForm.get(documentType).get(remarks['id']).clearValidators();
@@ -227,7 +236,7 @@ export class MapsFieldsComponent implements OnInit {
       let newTableValues = this.reportsForm.value['Face Value'];
       let wholeTableFromList2 = this.tableList.find(ele => ele['name'].includes("Amount of Water Beneficially Used"))
       
-      console.log(wholeTableFromList2)
+      //console.log(wholeTableFromList2)
       let key = wholeTableFromList2['name'];
       if(event.target.checked) {
         this.checkIfAmountsSameIsChecked = true;
@@ -245,12 +254,12 @@ export class MapsFieldsComponent implements OnInit {
             tempFormGroup[wholeTableFromList2['table'][a].length * a + b] = new FormControl(wholeTableFromList2['table'][a][b]['value']);
           }
         }
-        console.log(tempFormGroup);
+        //console.log(tempFormGroup);
         
         let temFbGroup = {};
         temFbGroup[key] = new FormGroup(tempFormGroup)
         this.reportsForm.setControl(key, this.fb.group(tempFormGroup));
-        console.log(this.reportsForm)
+        //console.log(this.reportsForm)
         this.reportsForm.get(key).updateValueAndValidity()
       } else {
         this.popupMessage = 'You are about to clear the table. You may lose the updated values. Do you want to proceed?';
@@ -271,7 +280,7 @@ export class MapsFieldsComponent implements OnInit {
 
       //if check if amounts is turned off then clear the form and if it is turned on then copy the table again and recreate the formgroup
     ///if and during the period covered... is checked unchecked, make conservation efforts valid/invalid
-    this.onClickInInput(field);
+    // this.onClickInInput(field);
   }
 
   resetTable(data?, cancel?) {
@@ -279,7 +288,7 @@ export class MapsFieldsComponent implements OnInit {
     if (cancel) {
       data.event.setValue(!data.event.value)
       data.event.updateValueAndValidity();
-      console.log(data.event.value);
+      //console.log(data.event.value);
       return;
     }
     if(data) {
@@ -299,7 +308,7 @@ export class MapsFieldsComponent implements OnInit {
   }
 
   onClickInInputFieldInTable(field, tablePage, docWidth, docHeight) {
-    console.log(docHeight, docWidth)
+    //console.log(docHeight, docWidth)
     if(!field['page'] || !field['bbox']) {
       field['page'] = tablePage;
       field['bbox'] = this.calculateBoundingBoxes(field['xmin'], field['ymin'], field['xmax'], field['ymax'], docWidth, docHeight);
@@ -316,7 +325,7 @@ export class MapsFieldsComponent implements OnInit {
     let pageKeys = Object.keys(this.staticLicenseReportsJson['values'])
     for(let i = 0;  i < pageKeys.length; i++) {
       // let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
-      // console.log(tempAllResultsByPage);
+      // //console.log(tempAllResultsByPage);
       // let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
       // let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
       // let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
@@ -376,11 +385,11 @@ export class MapsFieldsComponent implements OnInit {
 
       //Get and Store All values from documentTypeForm
       let keys = Object.keys(this.reportsForm.value[this.documentType])
-      console.log(keys)
+      //console.log(keys)
       for (let i = 0; i < allresults.length; i++) {
         for (let j = 0; j < keys.length; j++) {
           if (allresults[i]['id'] === keys[j]) {
-            console.log('aaa')
+            //console.log('aaa')
             allresults[i]['final_display_value'] = this.reportsForm.value[this.documentType][keys[j]];
             break;
           }
@@ -392,21 +401,21 @@ export class MapsFieldsComponent implements OnInit {
         if (keys != this.documentType) {
           for (let j = 0; j < allresults.length; j++) {
             if (allresults[j]['display_label'] === keys[i]) {
-              console.log('bbb')
+              //console.log('bbb')
               allresults[j]['final_display_value'] = this.reportsForm.value[keys[i]];
               break;
             }
           }
         }
       }
-      console.log(this.tableList);
+      //console.log(this.tableList);
 
       this.prefillStaticJson()
 
       let pageKeys = Object.keys(this.staticLicenseReportsJson['values'])
       for (let i = 0; i < pageKeys.length; i++) {
         let tempAllResultsByPage = allresults.filter(ele => ele['page'] == i + 1);
-        console.log(tempAllResultsByPage);
+        //console.log(tempAllResultsByPage);
         let tempAllResultsByPageKV = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('KV'));
         let tempAllResultsByPageSE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('SE'));
         let tempAllResultsByPageTE = tempAllResultsByPage.filter(ele => ele['value']['rectanglelabels'].includes('TE'));
@@ -468,7 +477,7 @@ export class MapsFieldsComponent implements OnInit {
               })
             }
           } else if (keys[j] === 'SE') {
-            //console.log(tempAllResultsByPageSE)
+            ////console.log(tempAllResultsByPageSE)
             for (let k = 0; k < tempAllResultsByPageSE.length; k++) {
               let SEKeys = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]]
               this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].map(ele => {
@@ -497,7 +506,7 @@ export class MapsFieldsComponent implements OnInit {
                 if (this.tableList[k]['name'] === tempAllResultsByPageTE[l]['display_label']) {
                   tempTable = cloneDeep(this.tableList[k]['full_table']);
                   tempTableFromForm = cloneDeep(tempAllResultsByPageTE[l]['final_display_value']);
-                  console.log(tempTable, tempTableFromForm);
+                  //console.log(tempTable, tempTableFromForm);
 
                   for (let m = 1; m < tempTable.display_value.length; m++) {
                     for (let n = 1; n < tempTable.display_value[m].length; n++) {
@@ -548,7 +557,7 @@ export class MapsFieldsComponent implements OnInit {
           }
 
           if (keys[j] === 'SE') {
-            //console.log(tempAllResultsByPageSE)
+            ////console.log(tempAllResultsByPageSE)
             for (let k = 0; k < this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]].length; k++) {
               let ele = this.staticLicenseReportsJson['values'][pageKeys[i]][keys[j]][k];
               let eleKeys = Object.keys(ele);
@@ -576,20 +585,20 @@ export class MapsFieldsComponent implements OnInit {
           "Extracted Json": this.staticLicenseReportsJson
         }
       }
-      console.log(updateMetadataBody);
+      //console.log(updateMetadataBody);
       const updateMetadataResp = await this.docService.updateMetadata(updateMetadataBody).toPromise();
-      console.log(updateMetadataResp)
+      //console.log(updateMetadataResp)
 
-      let updateJsonToCsv;
+      // let updateJsonToCsv;
       if (!save) {
-        let jsonToCsvBody = {
-          vault_doc_id: this.staticLicenseReportsJson['vault_doc_id']
-        }
-        updateJsonToCsv = await this.docService.convertFromJsonToCsv(jsonToCsvBody).toPromise();
-        console.log(updateJsonToCsv)
+        // let jsonToCsvBody = {
+        //   vault_doc_id: this.staticLicenseReportsJson['vault_doc_id']
+        // }
+        // updateJsonToCsv = await this.docService.convertFromJsonToCsv(jsonToCsvBody).toPromise();
+        // //console.log(updateJsonToCsv)
         let urlResp = await this.docService.getDocumentPresignedUrl(this.staticLicenseReportsJson['vault_doc_id']).toPromise()
         urlResp = urlResp.split(' ')[1];
-        console.log(urlResp);
+        //console.log(urlResp);
 
         let imgUrl = this.config.getConfig('imageUrl') + this.staticLicenseReportsJson['vault_doc_id'];
         let docType = "Report Of Licensee";
@@ -600,14 +609,14 @@ export class MapsFieldsComponent implements OnInit {
         } else if (this.profileId == 9) {
           docType = "Application to Appropriate Unappropriated Water"
         }
-        let complianceData = {
-          "vault_id": this.staticLicenseReportsJson['vault_doc_id'],
-          "applicationId": applicationID,
-          "pdfURL": urlResp,
-          "salesforceImageURL": imgUrl,
-          "docType": docType
-        }
-        await this.docService.compliancePostCall(complianceData).toPromise();
+        // let complianceData = {
+        //   "vault_id": this.staticLicenseReportsJson['vault_doc_id'],
+        //   "applicationId": applicationID,
+        //   "pdfURL": urlResp,
+        //   "salesforceImageURL": imgUrl,
+        //   "docType": docType
+        // }
+        // await this.docService.compliancePostCall(complianceData).toPromise();
         this.isProcessing = false;
       }
 
@@ -625,7 +634,7 @@ export class MapsFieldsComponent implements OnInit {
         this.closeCaseEvent.emit();
       }
     } catch (err) {
-      console.log(err);
+      //console.log(err);
     } finally {
       this.isProcessing = false;
       this.buttonsDisableEvent.emit(false);
@@ -640,18 +649,20 @@ export class MapsFieldsComponent implements OnInit {
         ele['display_value'] = this.reportsForm.controls[tname]['value'][e];
       }
     });
-    console.log(this.separateTableValuesForLicenseSummary, e)
+    //console.log(this.separateTableValuesForLicenseSummary, e)
   }
 
   populateReportsOfLicenseFieldsUsingProfileDetails() {
     let allresults: any = [];
-    console.log(this.profileDetails, this.profileDetails.length);
+    //console.log(this.profileDetails, this.profileDetails.length);
     for(let i = 0; i < this.profileDetails.length; i++) {
       if(this.profileId === 9) {
         this.profileDetails[i]['annotations'][0]['result'].forEach(element => {
           element['tempTab'] = 'Page ' + (i + 1)
         });
       }
+      //console.log("profileDetails", this.profileDetails[0]['properties'][1])
+      console.log(this.profileDetails[i]['annotations'][0]['result'])
       allresults = allresults.concat(this.profileDetails[i]['annotations'][0]['result'])
     }
 
@@ -663,7 +674,7 @@ export class MapsFieldsComponent implements OnInit {
         allresults[i]['fieldType'] = 'checkbox';
       } else if (allresults[i]['value']['rectanglelabels'].includes('TE')) {
         allresults[i]['fieldType'] = 'table';
-        console.log(allresults[i]);
+        //console.log(allresults[i]);
       }
 
       allresults[i]['display_label'] = allresults[i]['meta']['text'][0].split('|')[2].trim();
@@ -767,7 +778,7 @@ export class MapsFieldsComponent implements OnInit {
             allresults[i]['columns'] = '1';
           }
           if(disLabel.includes('Conservation Efforts') ){
-            console.log(allresults[i])
+            //console.log(allresults[i])
           }
           if(disLabel.includes('Max Collection to  Storage') || 
           disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
@@ -791,7 +802,7 @@ export class MapsFieldsComponent implements OnInit {
           //   allresults[i]['columns'] = '1';
           // }
           // if(disLabel.includes('Conservation Efforts') ){
-          //   console.log(allresults[i])
+          //   //console.log(allresults[i])
           // }
           //if(disLabel.includes('Max Collection to  Storage') || 
           if(disLabel.includes('Source Of Water') || disLabel.includes('County') ) {
@@ -1065,7 +1076,7 @@ export class MapsFieldsComponent implements OnInit {
     allresults = allresults.filter(e => e['section'] != 'P2');
    
     this.allFieldsFromProfileDetails = [...allresults];
-    console.log(allresults);
+    //console.log(allresults);
     if(this.profileId === 8) {
       this.sectionList = ["Applicant Details", "License Summary", "1963", "1964", "1965", "Compliance"];
     } else if(this.profileId === 10) {
@@ -1088,7 +1099,7 @@ export class MapsFieldsComponent implements OnInit {
     let knownKeys = ["confidence", "xmin", "ymin", "xmax", "ymax", "doc_width", "doc_height", "display_label"]
     let values = this.licenseReportsJson['values'];
     let pagesArr = [];
-    console.log(values);
+    //console.log(values);
     let valueKeys = Object.keys(values);
     let retArray: any = [];
     this.tabsList = [];
@@ -1113,7 +1124,7 @@ export class MapsFieldsComponent implements OnInit {
             docHeight = tempV['doc_height'];
             if(values[valueKeys[i]]['KV'][j]['display_label'].includes('Use Net Acreage')) {
 //IMPORTANT CONSOLE LOGS              
-              console.log( values[valueKeys[i]]['KV'][j]['display_value'], values[valueKeys[i]]['KV'][j])
+              //console.log( values[valueKeys[i]]['KV'][j]['display_value'], values[valueKeys[i]]['KV'][j])
             }
             //values[valueKeys[i]]['KV'][j]['display_value'] = values[valueKeys[i]]['KV'][j][seObjKeys[0]];
             values[valueKeys[i]]['KV'][j]['bbox'] = this.calculateBoundingBoxes(tempV['xmin'], tempV['ymin'], tempV['xmax'], tempV['ymax'], tempV['doc_width'], tempV['doc_height']);
@@ -1167,7 +1178,7 @@ export class MapsFieldsComponent implements OnInit {
           }
         }
       }
-      console.log(values[valueKeys[i]]['TE'])
+      //console.log(values[valueKeys[i]]['TE'])
       if(values[valueKeys[i]]['TE']) {
         for(let j = 0; j < values[valueKeys[i]]['TE'].length; j++) {
           if(values[valueKeys[i]]['TE'][j]) {
@@ -1180,15 +1191,15 @@ export class MapsFieldsComponent implements OnInit {
             let allTableEntries = values[valueKeys[i]]['TE'][j][Object.keys(values[valueKeys[i]]['TE'][j])[0]];
             let headers = [];
             values[valueKeys[i]]['TE'][j]['display_label'] = allTableEntries['display_label'];
-            console.log(allTableEntries)
+            //console.log(allTableEntries)
             values[valueKeys[i]]['TE'][j]['bbox'] = this.calculateBoundingBoxes(allTableEntries['xmin'], allTableEntries['ymin'], allTableEntries['xmax'], allTableEntries['ymax'], docWidth, docHeight);
             values[valueKeys[i]]['TE'][j]['docWidth'] = docWidth;
             values[valueKeys[i]]['TE'][j]['docHeight'] = docHeight;
-            console.log(values[valueKeys[i]]['TE'][j]['bbox'])
+            //console.log(values[valueKeys[i]]['TE'][j]['bbox'])
             if(allTableEntries && allTableEntries['1']) {
-              console.log(allTableEntries, values[valueKeys[i]]['TE'][j])
+              //console.log(allTableEntries, values[valueKeys[i]]['TE'][j])
               let [headings, ...rows] = allTableEntries['1'];
-              console.log(headings, rows);
+              //console.log(headings, rows);
 
 
               //HARDCODED SECTION STARTS
@@ -1264,7 +1275,7 @@ export class MapsFieldsComponent implements OnInit {
                   headings.splice(l, 1)
                 }
               }
-              console.log(headings);
+              //console.log(headings);
               for(let k = 0; k < rows.length; k++) {
                 for(let l = rows[k].length - 1; l >= 0; l--) {
                   if(rows[k][l]['value'] === '') {
@@ -1310,10 +1321,10 @@ export class MapsFieldsComponent implements OnInit {
 
               //Addition FOR Profile 3
               for(let m = 1; m < rows[0].length; m++) {
-                console.log(rows[0][m], Number(rows[0][m]))
+                //console.log(rows[0][m], Number(rows[0][m]))
                 if(isNaN(Number(rows[0][m]['value']))) {
                   let tArr = Array(rows[0].length).fill({value: ""});
-                  console.log(tArr);
+                  //console.log(tArr);
                   rows.unshift(tArr);
                   break;
                 }
@@ -1330,7 +1341,7 @@ export class MapsFieldsComponent implements OnInit {
 
               
 
-              console.log(rows);
+              //console.log(rows);
               //HARDCODED SECTION STARTS //this.licenseReportsJson['doc_type'] === '' && 
               let name = values[valueKeys[i]]['TE'][j]['display_label'];
 
@@ -1344,7 +1355,7 @@ export class MapsFieldsComponent implements OnInit {
               }
 
               //HARDCODED SECTION ENDS
-              console.log(headings, rows, rows.length, rows[0].length)
+              //console.log(headings, rows, rows.length, rows[0].length)
               retArray.push({
                 "display_label": values[valueKeys[i]]['TE'][j]['display_label'],
                 "table": rows,
@@ -1369,7 +1380,7 @@ export class MapsFieldsComponent implements OnInit {
       m.set(this.allFieldsFromProfileDetails[i]['display_label'], this.allFieldsFromProfileDetails[i])
     }
 
-    console.log(m, retArray.length);
+    //console.log(m, retArray.length);
 
     for(let i = 0; i < retArray.length; i++) {
       if(m.has(retArray[i]['display_label'])) {
@@ -1379,12 +1390,12 @@ export class MapsFieldsComponent implements OnInit {
           temp['display_value'] = retArray[i]['display_value'];
           
           if(temp['display_value'] === undefined) {
-            console.log(temp)
+            //console.log(temp)
           }
           temp['bbox'] = retArray[i]['bbox'];
           temp['confidence'] = retArray[i]['confidence'];
           if(retArray[i]['page'] == undefined) {
-            console.log(retArray[i]);
+            //console.log(retArray[i]);
           }
           temp['page'] = retArray[i]['page'];
           if(this.profileId === 9) {
@@ -1396,11 +1407,11 @@ export class MapsFieldsComponent implements OnInit {
             
         } else if(temp['fieldType'] === 'table') {
 
-          console.log(retArray[i]);
+          //console.log(retArray[i]);
           if(temp['display_label'].includes('Amount of Water Beneficially Used') && this.checkIfAmountsSameIsChecked) {
             
             let wholeTableFromList = this.tableList.find(ele => ele['name'].includes("Face Value"))
-            console.log(wholeTableFromList);
+            //console.log(wholeTableFromList);
             temp['display_value'] = cloneDeep(wholeTableFromList['table']);
             retArray[i]['table'] = cloneDeep(wholeTableFromList['table']);
           } else {
@@ -1465,13 +1476,13 @@ export class MapsFieldsComponent implements OnInit {
       newTable['tab'] = 'Summary';
       newTable['display_value'] = newTable.rows
       newTable['full_table'] = newTable;
-  
+      // alert("Table creation")
       let newTempFormGroup = {};
       for (let a = 1; a < newTable['table'].length; a++) {
         for (let b = 0; b < newTable['table'][a].length; b++) {
           newTempFormGroup[newTable['table'][a].length * a + b] = new FormControl(newTable['table'][a][b]);
-          console.log(newTempFormGroup);
-          console.log( (newTable['table'][a].length * a) + b)
+          //console.log(newTempFormGroup);
+          //console.log( (newTable['table'][a].length * a) + b)
         }
       }
       let newkey =  newTable['name'];
@@ -1520,7 +1531,7 @@ export class MapsFieldsComponent implements OnInit {
       }
     }
     
-    console.log(this.allFieldsFromProfileDetails)
+    //console.log(this.allFieldsFromProfileDetails)
     this.reportsOfLicenseFields = [...this.allFieldsFromProfileDetails];
     
 
@@ -1547,10 +1558,10 @@ export class MapsFieldsComponent implements OnInit {
     this.reportsOfLicenseFields.forEach(element => {
       if (element['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?') && element['display_value'] == true) {
         let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
-        console.log(conservationEfforts, conservationEfforts['display_value'])
+        //console.log(conservationEfforts, conservationEfforts['display_value'])
 
         if (conservationEfforts['display_value'] == undefined || conservationEfforts['display_value'] == null || conservationEfforts['display_value'] == '') {
-          console.log(tempFormGroup, conservationEfforts['id']);
+          //console.log(tempFormGroup, conservationEfforts['id']);
           // alert()
           tempFormGroup[conservationEfforts['id']].addValidators(Validators.required)
           tempFormGroup[conservationEfforts['id']].updateValueAndValidity();
@@ -1559,10 +1570,10 @@ export class MapsFieldsComponent implements OnInit {
 
       // if (element['display_label'].includes('During the period covered by this Report, were you implementing any water conservation efforts?') && element['display_value'] == true) {
       //   let conservationEfforts = this.reportsOfLicenseFields.find(licenseField => licenseField['display_label'].includes('Conservation Efforts'))
-      //   console.log(conservationEfforts, conservationEfforts['display_value'])
+      //   //console.log(conservationEfforts, conservationEfforts['display_value'])
 
       //   if (conservationEfforts['display_value'] == undefined || conservationEfforts['display_value'] == null || conservationEfforts['display_value'] == '') {
-      //     console.log(tempFormGroup, conservationEfforts['id']);
+      //     //console.log(tempFormGroup, conservationEfforts['id']);
       //     // alert()
       //     tempFormGroup[conservationEfforts['id']].addValidators(Validators.required)
       //     tempFormGroup[conservationEfforts['id']].updateValueAndValidity();
@@ -1585,8 +1596,8 @@ export class MapsFieldsComponent implements OnInit {
     
 
     // this.reportsForm = new FormGroup(tempFormGroup);
-    console.log(this.reportsForm);
-    console.log(this.reportsForm.controls[this.documentType]['controls']['EVI51XZpu-']);
+    //console.log(this.reportsForm);
+    //console.log(this.reportsForm.controls[this.documentType]['controls']['EVI51XZpu-']);
     //check if profile details KV match with these if the do take the value from the valueKeys thing and also calculate bounding boxes and add that as a new attribute.
 
     //Collect all SE data
@@ -1595,7 +1606,7 @@ export class MapsFieldsComponent implements OnInit {
 
     //Put all these together (KV, SE) Keep TE separate as a new attribute called tables: [TE1, TE2, ..] in licenseOfReportsFields
 
-    console.log(retArray);
+    //console.log(retArray);
   }
 
   changesToLicenseSummary(m) {
@@ -1622,9 +1633,9 @@ export class MapsFieldsComponent implements OnInit {
       let name = this.allFieldsFromProfileDetails[i]['display_label']
       if(name === 'Purpose Of Water Used') {
         if(this.allFieldsFromProfileDetails[i]['display_value']) {
-          console.log(this.allFieldsFromProfileDetails[i])
+          //console.log(this.allFieldsFromProfileDetails[i])
           let separateValues = this.allFieldsFromProfileDetails[i]['display_value'].split('|');
-          console.log(separateValues)
+          //console.log(separateValues)
           const numOfRows = separateValues.length;
   
           for(let j = 0; j < numOfRows; j++) {
@@ -1653,7 +1664,7 @@ export class MapsFieldsComponent implements OnInit {
         
         if(m.has(name))
             m.delete(name) 
-        console.log(m);   
+        //console.log(m);   
       }
     }
     
@@ -1701,7 +1712,7 @@ export class MapsFieldsComponent implements OnInit {
           }
 
           
-          console.log( this.allFieldsFromProfileDetails[i]['display_value'], this.separateTableValuesForLicenseSummary)
+          //console.log( this.allFieldsFromProfileDetails[i]['display_value'], this.separateTableValuesForLicenseSummary)
           if(m.has(name))
             m.delete(name) 
         }
@@ -1711,7 +1722,7 @@ export class MapsFieldsComponent implements OnInit {
     rows.unshift(newHeadings)
     for (let a = 1; a < rows.length; a++) {
       for (let b = 0; b <rows[a].length; b++) {
-        console.log(rows[a].length * a + b, rows[a][b])
+        //console.log(rows[a].length * a + b, rows[a][b])
         //tempFormGroup[retArray[i]['table'][a].length * a + b] = new FormControl(retArray[i]['table'][a][b]['value']);
       }
     }
@@ -1725,8 +1736,8 @@ export class MapsFieldsComponent implements OnInit {
         })
       }
     }
-    console.log(newHeadings, rows);
-    console.log(newHeadings, rowsWithData);
+    //console.log(newHeadings, rows);
+    //console.log(newHeadings, rowsWithData);
     return {
       "rows": rows,
       "headings": newHeadings,
@@ -1737,7 +1748,7 @@ export class MapsFieldsComponent implements OnInit {
 
   transpose (matrix) {
     let [row] = matrix
-    console.log(matrix, row);
+    //console.log(matrix, row);
     return row.map((value, column) => matrix.map(row => row[column]))
   }
 
@@ -1750,7 +1761,7 @@ export class MapsFieldsComponent implements OnInit {
         doc_width = parseInt(doc_width);
         doc_height = parseInt(doc_height);
 
-        // console.log(xmin, xmax, ymin, ymax, doc_width, doc_height);
+        // //console.log(xmin, xmax, ymin, ymax, doc_width, doc_height);
         let bbox_width = xmax - xmin;
 
         let bbox_height = ymax - ymin;

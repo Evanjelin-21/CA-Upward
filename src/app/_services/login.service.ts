@@ -11,7 +11,7 @@ export class loginService {
 
     public login() {
         var url = this.config.getConfig("signInUrl");
-        return this.http.post<any>(url, {"username": "admin", "password": "Deloitte#1"})
+        return this.http.post<any>(url, {"username": "admin", "password": "#PasswordA1"})
             .pipe();
     }
 

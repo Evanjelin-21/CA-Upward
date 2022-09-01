@@ -18,17 +18,17 @@ export class JwtInterceptor implements HttpInterceptor {
         // private config: AppConfig
         private loginSvc: loginService
     ) {
-       
+
     }
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<any> {
         // add authorization header with jwt token if available
         //let currentUser = this.authenticationService.currentUserValue;
         let currentUser = {
-            "token":  localStorage.getItem('token'), 
-            "username":"admin"
+            "token": localStorage.getItem('token'),
+            "username": "admin"
         }
 
-        if (!request.url.endsWith('s3.amazonaws.com/')) {
+        if (!request.url.endsWith('s3.amazonaws.com/') && !request.url.includes('entityprofile/')) {
             if (currentUser && currentUser.token) {
                 request = request.clone({
                     //setHeaders: { 
@@ -41,26 +41,37 @@ export class JwtInterceptor implements HttpInterceptor {
                     })
                 });
             }
-        } 
+        } else if (request.url.includes('entityprofile/')) {
+            request = request.clone({
+                //setHeaders: { 
+                //    Authorization: `Bearer ${currentUser.token}`
+                //}
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Basic YWRtaW46I1Bhc3N3b3JkQTE=`,
+                    //"dms-user": currentUser.username
+                })
+            });
+        }
         return next.handle(request).pipe(catchError(async err => {
             if (err instanceof HttpErrorResponse && err.status === 401) {
                 console.error(err)
-                if(!localStorage.getItem('token')) {
+                if (!localStorage.getItem('token')) {
                     let json = await this.loginSvc.login().toPromise();
-        
-                    if(json['token']) {
-                      localStorage.setItem('token', json['token']);
-                      window.location.reload()
+
+                    if (json['token']) {
+                        localStorage.setItem('token', json['token']);
+                        window.location.reload()
                     }
                 }
-            } else if (err instanceof HttpErrorResponse && err.status === 500 && err.error.message.includes("Authorization token is not valid")) { 
+            } else if (err instanceof HttpErrorResponse && err.status === 500 && err.error.message.includes("Authorization token is not valid")) {
                 localStorage.removeItem('token');
-                if(!localStorage.getItem('token')) {
+                if (!localStorage.getItem('token')) {
                     let json = await this.loginSvc.login().toPromise();
-        
-                    if(json['token']) {
-                      localStorage.setItem('token', json['token']);
-                      window.location.reload()
+
+                    if (json['token']) {
+                        localStorage.setItem('token', json['token']);
+                        window.location.reload()
                     }
                 }
                 console.error(err)

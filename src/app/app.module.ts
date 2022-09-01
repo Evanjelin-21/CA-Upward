@@ -38,6 +38,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CookieService } from 'ngx-cookie-service';
 import { AppConfig } from 'src/assets/config/app-config';
 import { FilterPipePipe } from './_helpers/filter-pipe.pipe';
+import {SafePipe} from './_helpers/safe.pipe';
+
 export function initConfig(config: AppConfig) {
       return () => config.load();
 } 
@@ -46,7 +48,8 @@ export function initConfig(config: AppConfig) {
     AppComponent,
     HomeComponent,
     MapsFieldsComponent,
-    FilterPipePipe
+    FilterPipePipe,
+    SafePipe
   ],
   imports: [
     BrowserModule,
