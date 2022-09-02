@@ -49,7 +49,7 @@ var nodeNamesValues = {}; //remember custom node name values
 var ithInstance = undefined;
 var folderDiv
 var spinnerDiv
-var docuEdgeEndPoint = "https://mw0f6agaae.execute-api.us-east-2.amazonaws.com/dev/"
+var docuEdgeEndPoint = "https://mw0f6agaae.execute-api.us-east-2.amazonaws.com/demo/"
 
 // var upwardEndPoint = "https://il4p364yh4.execute-api.us-east-2.amazonaws.com"
 
@@ -1698,7 +1698,7 @@ async function getDocURL(token, vaultdocId) {
   }
   console.log(header);
   return new Promise(async function (resolve, reject) {
-    var url = 'https://mw0f6agaae.execute-api.us-east-2.amazonaws.com/dev/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
+    var url = 'https://mw0f6agaae.execute-api.us-east-2.amazonaws.com/demo/documents/view/' + vaultdocId//74e144b3-557f-44ce-8081-ac935c9be534';
     const response = await fetch(url, { headers: header })
     const data = await response.json()
     console.log("Response", data)
